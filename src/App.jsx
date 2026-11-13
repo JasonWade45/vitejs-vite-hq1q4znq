@@ -4447,7 +4447,7 @@ export default function App() {
                     {isRtl ? `منصة التداول والتحليل الكمي — ${displayName}` : `${displayName} · Quantitative Trading Desk`}
                   </h1>
                   <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
-                    PRO v3.4
+                    PRO v4.1
                   </span>
                 </div>
                 <p className="text-[11px] text-slate-500 dark:text-slate-400">
