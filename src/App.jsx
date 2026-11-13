@@ -1983,6 +1983,32 @@ async function fetchYahooQuotes(yahooTickers, timeoutMs = 5000) {
     };
   };
 
+  // ── Tier 0: same-origin Vercel serverless proxy (/api/quotes) ─────────────
+  // The browser talks to THIS deployment — no CORS, no third-party proxy.
+  // Available only in the production deployment; local dev falls through.
+  try {
+    const apiUrl = `/api/quotes?symbols=${encodeURIComponent(tickers.join(','))}`;
+    const data = await fetchJsonWithTimeout(apiUrl, timeoutMs);
+    if (data?.ok && Array.isArray(data.quotes) && data.quotes.length) {
+      const quotes = new Map();
+      for (const q of data.quotes) {
+        const price = Number(q?.price);
+        if (q?.symbol && Number.isFinite(price) && price > 0) {
+          quotes.set(q.symbol, {
+            price,
+            time: Number(q.time) || Date.now(),
+            marketState: q.marketState || null
+          });
+        }
+      }
+      if (quotes.size > 0) {
+        return { ok: true, count: quotes.size, quotes, error: null, ms: Date.now() - t0, tier: 'api' };
+      }
+    }
+  } catch {
+    /* /api unavailable here (local dev) or failed — try direct proxies */
+  }
+
   // ── Tier 1: spark batch through the proxy cascade ─────────────────────────
   const sparkUrl = `https://query1.finance.yahoo.com/v7/finance/spark?symbols=${encodeURIComponent(
     tickers.join(',')
@@ -4418,7 +4444,7 @@ export default function App() {
     // 2) Batch quotes via the real proxy cascade
     const batch = await fetchYahooQuotes(tickers, 5000);
     if (batch.ok) {
-      log(`✅ [Yahoo Finance (${batch.tier === 'spark' ? 'spark — طلب مجمع' : 'v8 chart — كل رمز على حدة'}) عبر بروكسي CORS] استلمنا أسعار ${batch.count}/${tickers.length} رمز في ${batch.ms}ms`);
+      log(`✅ [${batch.tier === 'api' ? 'Vercel /api (spark)' : batch.tier === 'spark' ? 'Yahoo spark مباشرة' : 'Yahoo v8 chart'}] استلمنا أسعار ${batch.count}/${tickers.length} رمز في ${batch.ms}ms`);
       tickers.slice(0, 6).forEach((t) => {
         const q = batch.quotes.get(t);
         if (q) {
@@ -5137,7 +5163,7 @@ const SessionStateChip = ({ state }) => {
                     {isRtl ? `منصة التداول والتحليل الكمي — ${displayName}` : `${displayName} · Quantitative Trading Desk`}
                   </h1>
                   <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
-                    PRO v4.2
+                    PRO v4.3
                   </span>
                 </div>
                 <p className="text-[11px] text-slate-500 dark:text-slate-400">
@@ -9321,11 +9347,19 @@ const SessionStateChip = ({ state }) => {
                     </thead>
                     <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                       <tr>
-                        <td className="py-3 px-3 font-bold text-emerald-500">Yahoo Finance — طلب مجمع (v7 spark) ثم v8 chart لكل رمز</td>
+                        <td className="py-3 px-3 font-bold text-emerald-400">Vercel /api/quotes — الـ Proxy الداخلي (المسار الأساسي)</td>
+                        <td className="py-3 px-3">نفس بيانات Yahoo، لكن serverless function داخل نفس الموقع داخل نفس الموقع — بدون CORS وبدون بروكسي خارجي</td>
+                        <td className="py-3 px-3">~15 دقيقة</td>
+                        <td className="py-3 px-3 font-semibold text-emerald-400">
+                          ✅ المسار الأساسي على الإنتاج — يعمل حتى لو AdBlocker مانع كل البروكسيات الخارجية (15 ثانية كاش مشترك لتقليل الضغط على Yahoo)
+                        </td>
+                      </tr>
+                      <tr>
+                        <td className="py-3 px-3 font-bold text-emerald-500">Yahoo Finance مباشرة (احتياطي) — spark ثم v8 عبر بروكسيات CORS</td>
                         <td className="py-3 px-3">أسعار آخر تداول: طلب مجمع spark لكل الرموز (EGX عبر `.CA` + US مباشرة)، ولو فشل يُجرّب v8 chart لكل رمز بالتوازي</td>
                         <td className="py-3 px-3">~15 دقيقة (مجاني)</td>
                         <td className="py-3 px-3 font-semibold text-emerald-500">
-                          ✅ المفعّل فعلاً — عبر سلسلة بروكسيات CORS (allorigins ← corsproxy.io ← cors.lol). لو نجح: الأسعار تُحدّث ويظهر طابع «أونلاين مباشر».
+                          ⚠️ احتياطي تلقائي لو /api غير متاح (مثلاً في التطوير المحلي أو فشل الـ function) — عبر سلسلة بروكسيات CORS (allorigins ← corsproxy.io ← cors.lol)
                         </td>
                       </tr>
                       <tr>
