@@ -1916,7 +1916,7 @@ function clearStoredSession() {
 }
 
 // ============================================================================
-// 6.4 LIVE QUOTE FETCHING — batch Yahoo v7 quotes through a CORS-proxy cascade.
+// 6.4 LIVE QUOTE FETCHING — Yahoo spark batch + v8 chart fallback, via a CORS-proxy cascade.
 // Yahoo/TradingView don't send CORS headers, so a browser must round-trip a
 // proxy. We try several; the first that returns parseable, sane quotes wins.
 // When EVERYTHING fails we say so honestly — we never silently serve seeded
@@ -1940,38 +1940,104 @@ async function fetchJsonWithTimeout(url, timeoutMs = 4500) {
   }
 }
 
-// Returns { ok, count, quotes: Map<symbol, quote>, error, ms }
-async function fetchYahooQuotes(yahooTickers, timeoutMs = 4500) {
+// Returns { ok, count, quotes: Map<symbol, { price, time, marketState }>, error, ms, tier }
+// Tier 1: batch /v7/finance/spark — one call, NO crumb required (documented Yahoo no-auth path)
+// Tier 2: per-symbol /v8/finance/chart — guaranteed no-auth fallback, parallel with limited concurrency
+async function fetchYahooQuotes(yahooTickers, timeoutMs = 5000) {
   const tickers = [...new Set((yahooTickers || []).filter(Boolean))];
-  if (!tickers.length) return { ok: false, count: 0, quotes: null, error: 'no tickers', ms: 0 };
-  const yUrl = `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${encodeURIComponent(
-    tickers.join(',')
-  )}`;
+  if (!tickers.length) return { ok: false, count: 0, quotes: null, error: 'no tickers', ms: 0, tier: null };
   const t0 = Date.now();
+
+  const parseSpark = (data) => {
+    const quotes = new Map();
+    const result = data?.spark?.result;
+    if (!Array.isArray(result)) return quotes;
+    for (const r of result) {
+      const meta = r?.response?.[0]?.meta;
+      const price = Number(meta?.regularMarketPrice);
+      if (!r?.symbol || !Number.isFinite(price) || price <= 0) continue;
+      const tsArr = r?.response?.[0]?.timestamp;
+      const time = Number(meta?.regularMarketTime)
+        ? Number(meta.regularMarketTime) * 1000
+        : Array.isArray(tsArr) && tsArr.length
+          ? Number(tsArr[tsArr.length - 1]) * 1000
+          : Date.now();
+      quotes.set(r.symbol, {
+        price,
+        time,
+        marketState: meta?.marketState || null
+      });
+    }
+    return quotes;
+  };
+
+  const parseV8Chart = (data) => {
+    const result = data?.chart?.result?.[0];
+    const meta = result?.meta;
+    const price = Number(meta?.regularMarketPrice);
+    if (!Number.isFinite(price) || price <= 0) return null;
+    return {
+      price,
+      time: Number(meta?.regularMarketTime) ? Number(meta.regularMarketTime) * 1000 : Date.now(),
+      marketState: meta?.marketState || null
+    };
+  };
+
+  // ── Tier 1: spark batch through the proxy cascade ─────────────────────────
+  const sparkUrl = `https://query1.finance.yahoo.com/v7/finance/spark?symbols=${encodeURIComponent(
+    tickers.join(',')
+  )}&range=1d`;
   for (const build of QUOTE_PROXIES) {
     try {
-      const data = await fetchJsonWithTimeout(build(yUrl), timeoutMs);
-      const result = data?.quoteResponse?.result;
-      if (Array.isArray(result) && result.length) {
-        const quotes = new Map();
-        for (const q of result) {
-          const price = Number(q?.regularMarketPrice);
-          if (q?.symbol && Number.isFinite(price) && price > 0) quotes.set(q.symbol, q);
-        }
-        if (quotes.size > 0) {
-          return { ok: true, count: quotes.size, quotes, error: null, ms: Date.now() - t0 };
-        }
+      const data = await fetchJsonWithTimeout(build(sparkUrl), timeoutMs);
+      const quotes = parseSpark(data);
+      if (quotes.size > 0) {
+        return { ok: true, count: quotes.size, quotes, error: null, ms: Date.now() - t0, tier: 'spark' };
       }
     } catch {
-      /* proxy failed — try the next one */
+      /* try next proxy */
     }
+  }
+
+  // ── Tier 2: per-symbol v8 chart through the same cascade (parallel-ish) ───
+  const workingProxy = async (url) => {
+    for (const build of QUOTE_PROXIES) {
+      try {
+        return await fetchJsonWithTimeout(build(url), timeoutMs);
+      } catch {
+        /* next */
+      }
+    }
+    return null;
+  };
+  const quotes = new Map();
+  const CONCURRENCY = 4;
+  for (let i = 0; i < tickers.length; i += CONCURRENCY) {
+    const chunk = tickers.slice(i, i + CONCURRENCY);
+    const settled = await Promise.allSettled(
+      chunk.map(async (t) => {
+        const v8 = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(
+          t
+        )}?range=1d&interval=1d`;
+        const data = await workingProxy(v8);
+        const parsed = data ? parseV8Chart(data) : null;
+        return [t, parsed];
+      })
+    );
+    for (const item of settled) {
+      if (item.status === 'fulfilled' && item.value[1]) quotes.set(item.value[0], item.value[1]);
+    }
+  }
+  if (quotes.size > 0) {
+    return { ok: true, count: quotes.size, quotes, error: null, ms: Date.now() - t0, tier: 'v8' };
   }
   return {
     ok: false,
     count: 0,
     quotes: null,
     error: 'تعذر الوصول لمصادر الأسعار الأونلاين من المتصفح',
-    ms: Date.now() - t0
+    ms: Date.now() - t0,
+    tier: null
   };
 }
 
@@ -1991,15 +2057,19 @@ const priceSourceMeta = (symbol, isRtl) => {
     const stateLabel =
       symbol.marketState === 'PRE' || symbol.marketState === 'PREPRE'
         ? isRtl
-          ? 'قبل الافتتاح — آخر سعر'
-          : 'Pre-market — last price'
+          ? 'أونلاين • قبل الافتتاح'
+          : 'Live • Pre-market'
         : symbol.marketState === 'POST' || symbol.marketState === 'POSTPOST'
           ? isRtl
-            ? 'بعد الإغلاق — آخر سعر'
-            : 'After-hours — last price'
-          : isRtl
-            ? 'آخر سعر — السوق مقفول'
-            : 'Last (market closed)';
+            ? 'أونلاين • بعد الإغلاق'
+            : 'Live • After-hours'
+          : symbol.marketState === 'CLOSED'
+            ? isRtl
+              ? 'آخر سعر — السوق مقفول'
+              : 'Last (market closed)'
+            : isRtl
+              ? 'آخر سعر محدّث أونلاين'
+              : 'Last price, synced online';
     return { tone: 'last', label: `${stateLabel} • ${hhmm}` };
   }
   return {
@@ -3467,7 +3537,7 @@ export default function App() {
     }
 
     // 2. BATCH-fetch live quotes for EVERY tracked symbol (not just the open one)
-    //    via Yahoo v7 → CORS-proxy cascade. Honest fallback chain — no fake "live".
+    //    via Yahoo spark → v8 chart → CORS-proxy cascade. Honest fallback — no fake "live".
     let quotesOk = false;
     let syncedCount = 0;
     try {
@@ -3483,16 +3553,16 @@ export default function App() {
           prev.map((s) => {
             const q = s.yahooTicker ? batch.quotes.get(s.yahooTicker) : null;
             if (!q) return s;
-            const price = Number(q.regularMarketPrice);
             const decimals = s.basePrice < 5 ? 3 : 2;
             return {
               ...s,
-              basePrice: +price.toFixed(decimals),
+              basePrice: +q.price.toFixed(decimals),
               lastUpdated: nowStr,
               delayMinutes: 15,
               quoteSource: 'yahoo_live',
-              quoteTime: q.regularMarketTime ? Number(q.regularMarketTime) * 1000 : Date.now(),
-              marketState: q.marketState || null
+              quoteTime: q.time || Date.now(),
+              marketState: q.marketState || null,
+              quoteTier: batch.tier || null
             };
           })
         );
@@ -4348,7 +4418,7 @@ export default function App() {
     // 2) Batch quotes via the real proxy cascade
     const batch = await fetchYahooQuotes(tickers, 5000);
     if (batch.ok) {
-      log(`✅ [Yahoo Finance v7 عبر بروكسي CORS] استلمنا أسعار ${batch.count}/${tickers.length} رمز في ${batch.ms}ms`);
+      log(`✅ [Yahoo Finance (${batch.tier === 'spark' ? 'spark — طلب مجمع' : 'v8 chart — كل رمز على حدة'}) عبر بروكسي CORS] استلمنا أسعار ${batch.count}/${tickers.length} رمز في ${batch.ms}ms`);
       tickers.slice(0, 6).forEach((t) => {
         const q = batch.quotes.get(t);
         if (q) {
@@ -5067,7 +5137,7 @@ const SessionStateChip = ({ state }) => {
                     {isRtl ? `منصة التداول والتحليل الكمي — ${displayName}` : `${displayName} · Quantitative Trading Desk`}
                   </h1>
                   <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
-                    PRO v4.1
+                    PRO v4.2
                   </span>
                 </div>
                 <p className="text-[11px] text-slate-500 dark:text-slate-400">
@@ -9251,8 +9321,8 @@ const SessionStateChip = ({ state }) => {
                     </thead>
                     <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                       <tr>
-                        <td className="py-3 px-3 font-bold text-emerald-500">Yahoo Finance — طلب مجمع (v7 quote)</td>
-                        <td className="py-3 px-3">أسعار آخر تداول لكل الرموز في طلب واحد: EGX عبر `.CA` (COMI.CA …) + US مباشرة (NVDA …)</td>
+                        <td className="py-3 px-3 font-bold text-emerald-500">Yahoo Finance — طلب مجمع (v7 spark) ثم v8 chart لكل رمز</td>
+                        <td className="py-3 px-3">أسعار آخر تداول: طلب مجمع spark لكل الرموز (EGX عبر `.CA` + US مباشرة)، ولو فشل يُجرّب v8 chart لكل رمز بالتوازي</td>
                         <td className="py-3 px-3">~15 دقيقة (مجاني)</td>
                         <td className="py-3 px-3 font-semibold text-emerald-500">
                           ✅ المفعّل فعلاً — عبر سلسلة بروكسيات CORS (allorigins ← corsproxy.io ← cors.lol). لو نجح: الأسعار تُحدّث ويظهر طابع «أونلاين مباشر».
