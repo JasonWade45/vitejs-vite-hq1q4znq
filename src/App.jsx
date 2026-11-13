@@ -117,7 +117,7 @@ const INITIAL_SYMBOLS = [
     source: 'TradingView Scanner',
     fallbackSource: 'Yahoo (.CA)',
     delayMinutes: 15,
-    lastUpdated: '14:30:00 القاهرة',
+    lastUpdated: 'مرجعي — لم يُزامن بعد',
     dailyLimitPct: 20,
     fundamentals: { pe: 6.8, pb: 2.1, eps: 12.44, divYield: 1.8, revGrowth: 38.5 },
     newsAr: [
@@ -144,7 +144,7 @@ const INITIAL_SYMBOLS = [
     source: 'TradingView Scanner',
     fallbackSource: 'Yahoo (.CA)',
     delayMinutes: 15,
-    lastUpdated: '14:30:00 القاهرة',
+    lastUpdated: 'مرجعي — لم يُزامن بعد',
     dailyLimitPct: 20,
     fundamentals: { pe: 18.4, pb: 2.9, eps: 3.17, divYield: 0.9, revGrowth: 44.2 },
     newsAr: [
@@ -171,7 +171,7 @@ const INITIAL_SYMBOLS = [
     source: 'TradingView Scanner',
     fallbackSource: 'Yahoo (.CA)',
     delayMinutes: 15,
-    lastUpdated: '14:30:00 القاهرة',
+    lastUpdated: 'مرجعي — لم يُزامن بعد',
     dailyLimitPct: 20,
     fundamentals: { pe: 8.2, pb: 2.4, eps: 5.63, divYield: 2.6, revGrowth: 31.0 },
     newsAr: [
@@ -197,7 +197,7 @@ const INITIAL_SYMBOLS = [
     source: 'TradingView Scanner',
     fallbackSource: 'Yahoo (.CA)',
     delayMinutes: 15,
-    lastUpdated: '14:30:00 القاهرة',
+    lastUpdated: 'مرجعي — لم يُزامن بعد',
     dailyLimitPct: 20,
     fundamentals: { pe: 7.9, pb: 1.1, eps: 2.93, divYield: null, revGrowth: 24.0 },
     newsAr: [
@@ -223,7 +223,7 @@ const INITIAL_SYMBOLS = [
     source: 'TradingView Scanner',
     fallbackSource: 'Yahoo (.CA)',
     delayMinutes: 15,
-    lastUpdated: '14:30:00 القاهرة',
+    lastUpdated: 'مرجعي — لم يُزامن بعد',
     dailyLimitPct: 20,
     fundamentals: { pe: 24.5, pb: 5.2, eps: 1.13, divYield: 1.4, revGrowth: 41.2 },
     newsAr: [
@@ -249,7 +249,7 @@ const INITIAL_SYMBOLS = [
     source: 'Yahoo (.CA)',
     fallbackSource: 'Stooq',
     delayMinutes: 15,
-    lastUpdated: '14:30:00 القاهرة',
+    lastUpdated: 'مرجعي — لم يُزامن بعد',
     dailyLimitPct: 20,
     fundamentals: { pe: 6.4, pb: 1.4, eps: 3.89, divYield: 6.2, revGrowth: 18.4 },
     newsAr: [
@@ -276,7 +276,7 @@ const INITIAL_SYMBOLS = [
     source: 'Yahoo (.CA)',
     fallbackSource: 'TradingView Scanner',
     delayMinutes: 15,
-    lastUpdated: '14:30:00 القاهرة',
+    lastUpdated: 'مرجعي — لم يُزامن بعد',
     dailyLimitPct: 20,
     fundamentals: { pe: 5.1, pb: null, eps: 0.85, divYield: 4.5, revGrowth: null },
     newsAr: [
@@ -302,7 +302,7 @@ const INITIAL_SYMBOLS = [
     source: 'TradingView Scanner',
     fallbackSource: 'Yahoo (.CA)',
     delayMinutes: 15,
-    lastUpdated: '14:30:00 القاهرة',
+    lastUpdated: 'مرجعي — لم يُزامن بعد',
     dailyLimitPct: 20,
     fundamentals: { pe: null, pb: null, eps: null, divYield: null, revGrowth: null },
     newsAr: [
@@ -328,7 +328,7 @@ const INITIAL_SYMBOLS = [
     source: 'Finnhub + Yahoo',
     fallbackSource: 'TradingView America',
     delayMinutes: 0,
-    lastUpdated: 'محدث لحظياً (US)',
+    lastUpdated: 'مرجعي — لم يُزامن بعد',
     dailyLimitPct: 100,
     fundamentals: { pe: 42.1, pb: 38.4, eps: 3.29, divYield: 0.03, revGrowth: 94.0 },
     newsAr: [
@@ -354,7 +354,7 @@ const INITIAL_SYMBOLS = [
     source: 'Finnhub + Yahoo',
     fallbackSource: 'TradingView America',
     delayMinutes: 0,
-    lastUpdated: 'محدث لحظياً (US)',
+    lastUpdated: 'مرجعي — لم يُزامن بعد',
     dailyLimitPct: 100,
     fundamentals: { pe: 31.8, pb: 44.0, eps: 7.18, divYield: 0.44, revGrowth: 6.1 },
     newsAr: [
@@ -380,7 +380,7 @@ const INITIAL_SYMBOLS = [
     source: 'Finnhub + Yahoo',
     fallbackSource: 'TradingView America',
     delayMinutes: 0,
-    lastUpdated: 'محدث لحظياً (US)',
+    lastUpdated: 'مرجعي — لم يُزامن بعد',
     dailyLimitPct: 100,
     fundamentals: { pe: 33.4, pb: 11.2, eps: 12.76, divYield: 0.72, revGrowth: 16.0 },
     newsAr: [
@@ -406,7 +406,7 @@ const INITIAL_SYMBOLS = [
     source: 'Finnhub + Yahoo',
     fallbackSource: 'Stooq',
     delayMinutes: 0,
-    lastUpdated: 'محدث لحظياً (US)',
+    lastUpdated: 'مرجعي — لم يُزامن بعد',
     dailyLimitPct: 100,
     fundamentals: { pe: 26.4, pb: 4.8, eps: 22.28, divYield: 1.21, revGrowth: 10.5 },
     newsAr: [
@@ -432,7 +432,7 @@ const INITIAL_SYMBOLS = [
     source: 'Yahoo (.L)',
     fallbackSource: 'TradingView UK',
     delayMinutes: 15,
-    lastUpdated: 'متأخر 15 دقيقة (LSE)',
+    lastUpdated: 'مرجعي — لم يُزامن بعد',
     dailyLimitPct: 100,
     fundamentals: { pe: 8.9, pb: 1.1, eps: 2.9, divYield: 4.1, revGrowth: -3.2 },
     newsAr: [
@@ -458,7 +458,7 @@ const INITIAL_SYMBOLS = [
     source: 'Yahoo (.T)',
     fallbackSource: 'Stooq JP',
     delayMinutes: 20,
-    lastUpdated: 'متأخر 20 دقيقة (طوكيو)',
+    lastUpdated: 'مرجعي — لم يُزامن بعد',
     dailyLimitPct: 100,
     fundamentals: { pe: 9.4, pb: 1.15, eps: 291.4, divYield: 2.8, revGrowth: 11.2 },
     newsAr: [
@@ -484,7 +484,7 @@ const INITIAL_SYMBOLS = [
     source: 'TradingView Scanner (EGX:EGX30)',
     fallbackSource: 'Mubasher / Stooq',
     delayMinutes: 15,
-    lastUpdated: '14:30:00 القاهرة',
+    lastUpdated: 'مرجعي — لم يُزامن بعد',
     dailyLimitPct: 20,
     fundamentals: { pe: 7.4, pb: 1.9, eps: null, divYield: 2.9, revGrowth: null },
     newsAr: [
@@ -1711,7 +1711,7 @@ function renderTelegramChartDataURL(analysis) {
   ctx.fillStyle = '#94a3b8';
   ctx.font = '12px monospace';
   ctx.fillText(
-    `Source: ${analysis.symbol.source} | Score: ${analysis.signal.compositeScore}/100 | R:R ${analysis.signal.rrRatio}:1`,
+    `Source: ${priceSourceMeta(analysis.symbol, false).label} | Score: ${analysis.signal.compositeScore}/100 | R:R ${analysis.signal.rrRatio}:1`,
     20,
     48
   );
@@ -1913,6 +1913,238 @@ function clearStoredSession() {
   try {
     localStorage.removeItem(STORAGE_KEYS.SESSION);
   } catch {}
+}
+
+// ============================================================================
+// 6.4 LIVE QUOTE FETCHING — batch Yahoo v7 quotes through a CORS-proxy cascade.
+// Yahoo/TradingView don't send CORS headers, so a browser must round-trip a
+// proxy. We try several; the first that returns parseable, sane quotes wins.
+// When EVERYTHING fails we say so honestly — we never silently serve seeded
+// (reference) prices as if they were live.
+// ============================================================================
+const QUOTE_PROXIES = [
+  (u) => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`,
+  (u) => `https://corsproxy.io/?url=${encodeURIComponent(u)}`,
+  (u) => `https://api.cors.lol/raw/${u}`
+];
+
+async function fetchJsonWithTimeout(url, timeoutMs = 4500) {
+  const controller = new AbortController();
+  const t = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const res = await fetch(url, { signal: controller.signal });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return await res.json();
+  } finally {
+    clearTimeout(t);
+  }
+}
+
+// Returns { ok, count, quotes: Map<symbol, quote>, error, ms }
+async function fetchYahooQuotes(yahooTickers, timeoutMs = 4500) {
+  const tickers = [...new Set((yahooTickers || []).filter(Boolean))];
+  if (!tickers.length) return { ok: false, count: 0, quotes: null, error: 'no tickers', ms: 0 };
+  const yUrl = `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${encodeURIComponent(
+    tickers.join(',')
+  )}`;
+  const t0 = Date.now();
+  for (const build of QUOTE_PROXIES) {
+    try {
+      const data = await fetchJsonWithTimeout(build(yUrl), timeoutMs);
+      const result = data?.quoteResponse?.result;
+      if (Array.isArray(result) && result.length) {
+        const quotes = new Map();
+        for (const q of result) {
+          const price = Number(q?.regularMarketPrice);
+          if (q?.symbol && Number.isFinite(price) && price > 0) quotes.set(q.symbol, q);
+        }
+        if (quotes.size > 0) {
+          return { ok: true, count: quotes.size, quotes, error: null, ms: Date.now() - t0 };
+        }
+      }
+    } catch {
+      /* proxy failed — try the next one */
+    }
+  }
+  return {
+    ok: false,
+    count: 0,
+    quotes: null,
+    error: 'تعذر الوصول لمصادر الأسعار الأونلاين من المتصفح',
+    ms: Date.now() - t0
+  };
+}
+
+// Honest price-source label derived from what actually synced.
+const priceSourceMeta = (symbol, isRtl) => {
+  if (symbol?.quoteSource === 'yahoo_live') {
+    const t = symbol.quoteTime ? new Date(symbol.quoteTime) : null;
+    const hhmm = t
+      ? t.toLocaleTimeString(isRtl ? 'ar-EG' : 'en-GB', { hour: '2-digit', minute: '2-digit' })
+      : '';
+    if (symbol.marketState === 'REGULAR') {
+      return {
+        tone: 'live',
+        label: isRtl ? `أونلاين مباشر • ${hhmm}` : `Live • ${hhmm}`
+      };
+    }
+    const stateLabel =
+      symbol.marketState === 'PRE' || symbol.marketState === 'PREPRE'
+        ? isRtl
+          ? 'قبل الافتتاح — آخر سعر'
+          : 'Pre-market — last price'
+        : symbol.marketState === 'POST' || symbol.marketState === 'POSTPOST'
+          ? isRtl
+            ? 'بعد الإغلاق — آخر سعر'
+            : 'After-hours — last price'
+          : isRtl
+            ? 'آخر سعر — السوق مقفول'
+            : 'Last (market closed)';
+    return { tone: 'last', label: `${stateLabel} • ${hhmm}` };
+  }
+  return {
+    tone: 'ref',
+    label: isRtl ? 'سعر مرجعي — مش لحظي' : 'Reference — not live'
+  };
+};
+
+// ============================================================================
+// 6.4.1 MARKET SESSIONS — timezone-aware open/close engine (no hardcoded DST)
+// EGX: Sun–Thu 10:00–14:30 Africa/Cairo (Ramadan: 10:00–13:30)
+// US : Mon–Fri  pre-market 04:00–09:30 | regular 09:30–16:00 | after-hours 16:00–20:00 ET
+// ============================================================================
+const TZ_CAIRO = 'Africa/Cairo';
+const TZ_NY = 'America/New_York';
+const WEEKDAY_INDEX = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 };
+const DAY_NAMES_AR = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
+
+function zonedClock(nowMs, timeZone) {
+  const dtf = new Intl.DateTimeFormat('en-GB', {
+    timeZone,
+    weekday: 'short',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false
+  });
+  const parts = {};
+  for (const p of dtf.formatToParts(new Date(nowMs))) parts[p.type] = p.value;
+  const secondsOfDay =
+    (Number(parts.hour) % 24) * 3600 + Number(parts.minute) * 60 + Number(parts.second);
+  return { dayIdx: WEEKDAY_INDEX[parts.weekday] ?? 0, secondsOfDay };
+}
+
+function tzOffsetMinutes(nowMs, timeZone) {
+  const dtf = new Intl.DateTimeFormat('en-US', {
+    timeZone,
+    hour12: false,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit'
+  });
+  const parts = {};
+  for (const p of dtf.formatToParts(new Date(nowMs))) parts[p.type] = p.value;
+  const asUTC = Date.UTC(
+    Number(parts.year),
+    Number(parts.month) - 1,
+    Number(parts.day),
+    Number(parts.hour) % 24,
+    Number(parts.minute),
+    Number(parts.second)
+  );
+  return Math.round((asUTC - nowMs) / 60000);
+}
+
+const fmtMinutesOfDay = (mins) => {
+  const n = ((Math.round(mins) % 1440) + 1440) % 1440;
+  return `${String(Math.floor(n / 60)).padStart(2, '0')}:${String(n % 60).padStart(2, '0')}`;
+};
+
+const fmtCountdown = (totalSeconds) => {
+  const s = Math.max(0, Math.floor(totalSeconds));
+  const h = Math.floor(s / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  const sec = s % 60;
+  return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`;
+};
+
+function sessionStatus(nowMs, timeZone, tradingDays, openMin, closeMin) {
+  const { dayIdx, secondsOfDay } = zonedClock(nowMs, timeZone);
+  const nowMin = secondsOfDay / 60;
+  const isTradingDay = tradingDays.includes(dayIdx);
+  if (isTradingDay && nowMin >= openMin && nowMin < closeMin) {
+    return { state: 'OPEN', countdownSec: Math.floor((closeMin - nowMin) * 60) };
+  }
+  if (isTradingDay && nowMin < openMin) {
+    return { state: 'PRE', countdownSec: Math.floor((openMin - nowMin) * 60) };
+  }
+  return { state: 'CLOSED', countdownSec: 0 };
+}
+
+function nextOpenLabelAr(nowMs, timeZone, tradingDays, openMin) {
+  const { dayIdx, secondsOfDay } = zonedClock(nowMs, timeZone);
+  const nowMin = secondsOfDay / 60;
+  for (let d = 0; d <= 7; d++) {
+    const candDay = (dayIdx + d) % 7;
+    if (!tradingDays.includes(candDay)) continue;
+    if (d === 0) {
+      if (nowMin < openMin) return 'يفتح النهاردة';
+      continue;
+    }
+    if (d === 1) return `يفتح بكرة (${DAY_NAMES_AR[candDay]})`;
+    return `يفتح يوم ${DAY_NAMES_AR[candDay]}`;
+  }
+  return 'يفتح قريباً';
+}
+
+// One-stop model for the sessions card — computed from `nowMs` only (pure).
+function buildSessionsModel(nowMs, ramadanMode) {
+  const egxTradingDays = [0, 1, 2, 3, 4]; // Sun–Thu
+  const usTradingDays = [1, 2, 3, 4, 5]; // Mon–Fri
+  const egxOpen = 10 * 60;
+  const egxClose = (ramadanMode ? 13 : 14) * 60 + 30;
+
+  const egxStatus = sessionStatus(nowMs, TZ_CAIRO, egxTradingDays, egxOpen, egxClose);
+  const egxNextOpen =
+    egxStatus.state === 'CLOSED' ? nextOpenLabelAr(nowMs, TZ_CAIRO, egxTradingDays, egxOpen) : null;
+
+  const nyOffset = tzOffsetMinutes(nowMs, TZ_NY);
+  const cairoOffset = tzOffsetMinutes(nowMs, TZ_CAIRO);
+  const diff = cairoOffset - nyOffset;
+  const toCairo = (etMinutes) => fmtMinutesOfDay(etMinutes + diff);
+
+  const usRows = [
+    { id: 'pre', labelAr: 'قبل الافتتاح', labelEn: 'Pre-market', openMin: 4 * 60, closeMin: 9 * 60 + 30, et: '04:00–09:30' },
+    { id: 'regular', labelAr: 'الجلسة العادية', labelEn: 'Regular', openMin: 9 * 60 + 30, closeMin: 16 * 60, et: '09:30–16:00' },
+    { id: 'after', labelAr: 'بعد الإغلاق', labelEn: 'After-hours', openMin: 16 * 60, closeMin: 20 * 60, et: '16:00–20:00' }
+  ].map((row) => {
+    const status = sessionStatus(nowMs, TZ_NY, usTradingDays, row.openMin, row.closeMin);
+    return {
+      ...row,
+      cairo: `${toCairo(row.openMin)}–${toCairo(row.closeMin)}`,
+      ...status
+    };
+  });
+
+  const usRegular = usRows.find((r) => r.id === 'regular');
+  const usNextOpen =
+    usRegular.state !== 'OPEN' && usRegular.state !== 'PRE'
+      ? nextOpenLabelAr(nowMs, TZ_NY, usTradingDays, usRows[1].openMin)
+      : null;
+
+  return {
+    egx: {
+      ...egxStatus,
+      openStr: fmtMinutesOfDay(egxOpen),
+      closeStr: fmtMinutesOfDay(egxClose),
+      nextOpen: egxNextOpen,
+      ramadan: !!ramadanMode
+    },
+    us: { rows: usRows, regularState: usRegular.state, nextOpen: usNextOpen }
+  };
 }
 
 // ============================================================================
@@ -2920,6 +3152,15 @@ export default function App() {
   const [networkLatencyMs, setNetworkLatencyMs] = useState(118);
   const [onlineSyncMode, setOnlineSyncMode] = useState('ACTIVE_SYNC'); // ACTIVE_SYNC | SYNCING | VERIFIED_WEB
   const [usdEgpRate, setUsdEgpRate] = useState(49.45);
+  // Honest quote provenance: null = not checked yet, true = live quotes flowing, false = references only
+  const [quotesLive, setQuotesLive] = useState(null);
+  const [lastQuoteSyncMs, setLastQuoteSyncMs] = useState(null);
+  // 1-second heartbeat for session countdowns (independent of auto-refresh)
+  const [nowTickMs, setNowTickMs] = useState(() => Date.now());
+  useEffect(() => {
+    const t = setInterval(() => setNowTickMs(Date.now()), 1000);
+    return () => clearInterval(t);
+  }, []);
   const [priceFlashMap, setPriceFlashMap] = useState({}); // { canonicalId: 'up' | 'down' }
   const [isVerifyingWebPrices, setIsVerifyingWebPrices] = useState(false);
 
@@ -3225,59 +3466,63 @@ export default function App() {
       // Keep last verified rate
     }
 
-    // 2. Attempt live quote fetch for active symbol via public CORS proxy to Yahoo Finance v8 chart API
+    // 2. BATCH-fetch live quotes for EVERY tracked symbol (not just the open one)
+    //    via Yahoo v7 → CORS-proxy cascade. Honest fallback chain — no fake "live".
+    let quotesOk = false;
+    let syncedCount = 0;
     try {
-      const activeSym = symbols.find((s) => s.canonicalId === selectedSymbolId);
-      if (activeSym && activeSym.yahooTicker && !activeSym.yahooTicker.includes('Broken')) {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 2200);
-        const yUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(
-          activeSym.yahooTicker
-        )}?interval=1d&range=5d`;
-        const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(yUrl)}`;
-        const res = await fetch(proxyUrl, { signal: controller.signal });
-        clearTimeout(timeoutId);
-        if (res.ok) {
-          const data = await res.json();
-          const metaPrice = data?.chart?.result?.[0]?.meta?.regularMarketPrice;
-          if (metaPrice && Number(metaPrice) > 0) {
-            setSymbols((prev) =>
-              prev.map((s) =>
-                s.canonicalId === activeSym.canonicalId
-                  ? {
-                      ...s,
-                      basePrice: +Number(metaPrice).toFixed(s.basePrice < 5 ? 3 : 2),
-                      lastUpdated: `${new Date().toTimeString().split(' ')[0]} (أونلاين مباشر)`,
-                      delayMinutes: 0
-                    }
-                  : s
-              )
-            );
-          }
-        }
+      const tickers = symbols
+        .map((s) => s.yahooTicker)
+        .filter((t) => t && !String(t).includes('Broken'));
+      const batch = await fetchYahooQuotes(tickers, 4500);
+      if (batch.ok && batch.quotes) {
+        quotesOk = true;
+        syncedCount = batch.count;
+        const nowStr = `${new Date().toTimeString().split(' ')[0]} (أونلاين مباشر)`;
+        setSymbols((prev) =>
+          prev.map((s) => {
+            const q = s.yahooTicker ? batch.quotes.get(s.yahooTicker) : null;
+            if (!q) return s;
+            const price = Number(q.regularMarketPrice);
+            const decimals = s.basePrice < 5 ? 3 : 2;
+            return {
+              ...s,
+              basePrice: +price.toFixed(decimals),
+              lastUpdated: nowStr,
+              delayMinutes: 15,
+              quoteSource: 'yahoo_live',
+              quoteTime: q.regularMarketTime ? Number(q.regularMarketTime) * 1000 : Date.now(),
+              marketState: q.marketState || null
+            };
+          })
+        );
+        setLastQuoteSyncMs(batch.ms);
       }
     } catch {
-      // Fallback to tick stream below if CORS proxy is throttled
+      quotesOk = false;
     }
+    setQuotesLive(quotesOk);
 
-    // 3. Update tick stream & flash direction indicators across watched symbols
+    // 3. Micro-tick jitter — ONLY when a real quote sync succeeded this pass.
+    //    Offline/reference mode stays perfectly still instead of faking life.
     const flashes = {};
-    setLiveJitterMap((prev) => {
-      const next = { ...prev };
-      symbols.forEach((s) => {
-        const cur = prev[s.canonicalId] || 0;
-        // Bounded micro-tick within realistic bid/ask spread so prices never drift wildly
-        const delta = (Math.random() - 0.492) * 0.0028;
-        const updated = Math.max(-0.035, Math.min(0.035, +(cur + delta).toFixed(4)));
-        if (updated > cur) flashes[s.canonicalId] = 'up';
-        else if (updated < cur) flashes[s.canonicalId] = 'down';
-        next[s.canonicalId] = updated;
+    if (quotesOk) {
+      setLiveJitterMap((prev) => {
+        const next = { ...prev };
+        symbols.forEach((s) => {
+          const cur = prev[s.canonicalId] || 0;
+          // Bounded micro-tick within realistic bid/ask spread so prices never drift wildly
+          const delta = (Math.random() - 0.492) * 0.0028;
+          const updated = Math.max(-0.035, Math.min(0.035, +(cur + delta).toFixed(4)));
+          if (updated > cur) flashes[s.canonicalId] = 'up';
+          else if (updated < cur) flashes[s.canonicalId] = 'down';
+          next[s.canonicalId] = updated;
+        });
+        return next;
       });
-      return next;
-    });
-
-    setPriceFlashMap(flashes);
-    setTimeout(() => setPriceFlashMap({}), 900);
+      setPriceFlashMap(flashes);
+      setTimeout(() => setPriceFlashMap({}), 900);
+    }
 
     const now = new Date();
     const timeStr = now.toTimeString().split(' ')[0];
@@ -3285,14 +3530,18 @@ export default function App() {
     setLastSyncTimestampMs(Date.now());
     setSyncCount((c) => c + 1);
     setNetworkLatencyMs(Math.max(45, Math.min(340, Math.round(performance.now() - t0))));
-    setOnlineSyncMode('ACTIVE_SYNC');
+    setOnlineSyncMode(quotesOk ? 'ACTIVE_SYNC' : 'REFERENCE_ONLY');
     setSecondsToNextSync(refreshIntervalSec);
 
     if (isManual) {
       triggerToast(
-        isRtl
-          ? `تم تحديث الأسعار وفحص سلامة البيانات (${timeStr})`
-          : `Quotes synced & verified (${timeStr})`
+        quotesOk
+          ? isRtl
+            ? `تم تحديث ${syncedCount} سعر أونلاين من Yahoo Finance ✓`
+            : `Synced ${syncedCount} live quotes (Yahoo Finance) ✓`
+          : isRtl
+            ? 'تعذر الاتصال بمصدر الأسعار — المعروض أسعار مرجعية مش لحظية'
+            : 'Quote sources unreachable — prices shown are reference, not live'
       );
     }
   };
@@ -3329,7 +3578,7 @@ export default function App() {
         `أنت مدقق أسعار مالي مباشر للأستاذ ${displayName}. استخدم بحث جوجل لجلب أحدث سعر إغلاق أو تداول متاح بدقة، واذكر المصدر والتوقيت بوضوح دون أي مبالغة.`,
       useSearchGrounding: true,
       fallbackFn: () =>
-        `تم فحص السهم ${a.symbol.nameAr} (${a.symbol.canonicalId}):\n• السعر المعتمد في المنصة: ${fmtPrice(a.price)} ${a.symbol.currency} (المصدر: ${a.symbol.source}).\n• سعر صرف الدولار المرجعي المحدث: ${usdEgpRate} EGP.\n• نطاق الشراء الآمن المحسوب (ATR): ${fmtPrice(a.signal.entryZone[0])} - ${fmtPrice(a.signal.entryZone[1])} ${a.symbol.currency}.\n• نصيحة التنفيذ: التزم دائماً بالأوامر محددة السعر (Limit Orders) داخل منطقة الشراء ولا تنفذ أوامر سوق مفتوحة خارج ساعات الجلسة.`
+        `تم فحص السهم ${a.symbol.nameAr} (${a.symbol.canonicalId}):\n• السعر المعتمد في المنصة: ${fmtPrice(a.price)} ${a.symbol.currency} (المصدر: ${priceSourceMeta(a.symbol, true).label}).\n• سعر صرف الدولار المرجعي المحدث: ${usdEgpRate} EGP.\n• نطاق الشراء الآمن المحسوب (ATR): ${fmtPrice(a.signal.entryZone[0])} - ${fmtPrice(a.signal.entryZone[1])} ${a.symbol.currency}.\n• نصيحة التنفيذ: التزم دائماً بالأوامر محددة السعر (Limit Orders) داخل منطقة الشراء ولا تنفذ أوامر سوق مفتوحة خارج ساعات الجلسة.`
     });
     setGeminiStockDecision((prev) => ({
       ...prev,
@@ -3760,7 +4009,7 @@ export default function App() {
         source: newCustomTicker.exchange === 'EGX' ? 'TradingView Scanner' : 'Yahoo Finance',
         fallbackSource: 'Stooq',
         delayMinutes: newCustomTicker.exchange === 'EGX' ? 15 : 0,
-        lastUpdated: 'محدث الآن',
+        lastUpdated: 'مرجعي — لم يُزامن بعد',
         dailyLimitPct: newCustomTicker.exchange === 'EGX' ? 20 : 100,
         fundamentals: { pe: null, pb: null, eps: null, divYield: null, revGrowth: null },
         newsAr: [
@@ -4071,25 +4320,51 @@ export default function App() {
     );
   };
 
-  // Run Interactive Phase 0 Live Validation Probe
-  const handleRunPhase0Probe = () => {
+  // Phase 0 probe — a REAL connectivity test against the live quote sources,
+  // not a scripted demo. Results reflect what actually happened right now.
+  const handleRunPhase0Probe = async () => {
     setIsProbingPhase0(true);
     setPhase0ProbeLog([]);
-    const steps = [
-      '🚀 [Phase 0] Starting DataProvider probe on EGX (COMI, TMGH, SWDY, HRHO, EFIH, ORWE, EGX30) & US (NVDA, AAPL, SPY)...',
-      '✅ [TradingView Scanner /egypt/scan] HTTP 200 OK (142ms) -> Returned 224 EGX tickers + EGX30 (31,450) + ISINs (15m delayed).',
-      '✅ [Yahoo Finance .CA] COMI.CA, TMGH.CA, SWDY.CA -> 240 daily OHLCV bars verified.',
-      '⚠️ [Yahoo Finance ^CASE30] Anomaly caught: returned only 1 stale row -> Automatic route to TradingView/Stooq for EGX30 history.',
-      '⚠️ [Corporate Action Guard] EGX:MASR flagged for -31.5% single-bar unadjusted bonus-share gap (>20% EGX limit). Confidence capped.',
-      '✅ [Finnhub + Yahoo US] NVDA, AAPL, MSFT, SPY -> 0m real-time quotes + 60 req/min token bucket healthy.',
-      '🏁 [Phase 0 Complete] SQLite WAL cache warmed. Primary & Fallback routing active.'
-    ];
-    steps.forEach((line, idx) => {
-      setTimeout(() => {
-        setPhase0ProbeLog((prev) => [...prev, line]);
-        if (idx === steps.length - 1) setIsProbingPhase0(false);
-      }, (idx + 1) * 320);
-    });
+    const log = (line) => setPhase0ProbeLog((prev) => [...prev, line]);
+    const tickers = symbols
+      .map((s) => s.yahooTicker)
+      .filter((t) => t && !String(t).includes('Broken'));
+    log(`🚀 [Phase 0] فحص اتصال حقيقي بمصادر الأسعار لـ ${tickers.length} رمز (EGX + US)...`);
+
+    // 1) FX source (direct, no proxy)
+    try {
+      const fxRes = await fetch('https://open.er-api.com/v6/latest/USD');
+      const fxJson = await fxRes.json();
+      if (fxJson?.rates?.EGP) {
+        setUsdEgpRate(+Number(fxJson.rates.EGP).toFixed(2));
+        log(`✅ [open.er-api.com] سعر الدولار: ${Number(fxJson.rates.EGP).toFixed(2)} EGP — اتصال مباشر OK`);
+      } else {
+        log('⚠️ [open.er-api.com] وصل الرد لكن بدون سعر EGP — تم الاحتفاظ بآخر سعر معروف');
+      }
+    } catch (e) {
+      log('❌ [open.er-api.com] فشل الاتصال بمصدر سعر الدولار — تحقق من الإنترنت عندك');
+    }
+
+    // 2) Batch quotes via the real proxy cascade
+    const batch = await fetchYahooQuotes(tickers, 5000);
+    if (batch.ok) {
+      log(`✅ [Yahoo Finance v7 عبر بروكسي CORS] استلمنا أسعار ${batch.count}/${tickers.length} رمز في ${batch.ms}ms`);
+      tickers.slice(0, 6).forEach((t) => {
+        const q = batch.quotes.get(t);
+        if (q) {
+          log(`   • ${t} → ${Number(q.regularMarketPrice).toFixed(2)} (${q.marketState || 'غير معروف'})`);
+        }
+      });
+      if (tickers.length > 6) log(`   • …وباقي الـ ${tickers.length - 6} رمز وصلوا بنفس الطلب`);
+      setQuotesLive(true);
+      setLastQuoteSyncMs(batch.ms);
+    } else {
+      log('❌ [Yahoo Finance عبر كل البروكسيات] فشل الاتصال — المتصفح/الشبكة عندك بتحظر البروكسيات (allorigins / corsproxy.io / cors.lol)');
+      log('ℹ️ المنصة ستعرض الأسعار المرجعية المحفوظة — لن تدّعي أبداً أنها لحظية. استخدم «تحديث الآن» بعد عودة الاتصال.');
+      setQuotesLive(false);
+    }
+    log('🏁 [انتهى الفحص] هذا التقرير حقيقي 100% — مفيش خطوة مكتوب عليها «نجاح» من غير طلب فعلي.');
+    setIsProbingPhase0(false);
   };
 
   // Compute Portfolio Holdings & Risk Analytics for Current User
@@ -4282,7 +4557,7 @@ export default function App() {
       botReplyText =
         `📊 *تحليل سهم: ${target.symbol.nameAr} (${target.symbol.canonicalId})*\n` +
         `💵 السعر الحالي: ${fmtPrice(target.price, dec)} ${target.symbol.currency} (${fmtPct(target.changePct)})\n` +
-        `🕒 المصدر: ${target.symbol.source} (${target.symbol.lastUpdated})\n\n` +
+        `🕒 المصدر: ${priceSourceMeta(target.symbol, true).label} (${target.symbol.lastUpdated})\n\n` +
         `🧭 *الحالة الفنية:* ${target.signal.ruleNameAr} (${target.signal.compositeScore}/100)\n` +
         `🔒 *درجة الثقة:* ${target.signal.confidenceTier} (بناءً على ${target.backtest.sampleSize} إشارة تاريخية)\n\n` +
         `🎯 *المناطق السعرية المقترحة (ATR):*\n` +
@@ -4378,53 +4653,81 @@ export default function App() {
 
   const currentDecision = useMemo(() => getActionableDecision(currentAnalysis), [currentAnalysis]);
 
+const SESSION_CHIP = {
+  OPEN: { text: 'مفتوحة الآن', cls: 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-emerald-500/40', dot: 'bg-emerald-500 animate-pulse' },
+  PRE: { text: 'قبل الافتتاح', cls: 'bg-sky-500/15 text-sky-700 dark:text-sky-400 border-sky-500/40', dot: 'bg-sky-500' },
+  CLOSED: { text: 'مقفولة', cls: 'bg-slate-400/10 text-slate-500 dark:text-slate-400 border-slate-500/30', dot: 'bg-slate-400' }
+};
+
+const SessionStateChip = ({ state }) => {
+  const meta = SESSION_CHIP[state] || SESSION_CHIP.CLOSED;
+  return (
+    <span
+      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[10px] font-black whitespace-nowrap ${meta.cls}`}
+    >
+      <span className={`w-2 h-2 rounded-full ${meta.dot}`} />
+      {meta.text}
+    </span>
+  );
+};
+
+  // Market sessions model — recomputed every second from nowTickMs (pure)
+  const sessionsModel = buildSessionsModel(nowTickMs, ramadanMode);
+
   const TOUR_STEPS = [
     {
       targetId: 'tour-theme-controls',
       targetTab: 'dashboard',
-      badge: '1 / 7 — التحديث التلقائي والإضاءة',
+      badge: '1 / 8 — التحديث التلقائي والإضاءة',
       title: 'شريط المزامنة الحية (كل 5-10 ثوانٍ) والتحكم في الإضاءة',
       desc: 'من هنا تراقب عداد التحديث الأوتوماتيكي بالثانية، وتتحكم في سرعة التحديث (5 أو 7 أو 10 ثوانٍ)، وتبدل بين الوضع الصباحي والوضع الليلي.'
     },
     {
       targetId: 'tour-safety-guard',
       targetTab: 'dashboard',
-      badge: '2 / 7 — حارس سلامة الأسعار والتوقيت',
+      badge: '2 / 8 — حارس سلامة الأسعار والتوقيت',
       title: 'حارس عدم الشراء في أوقات أو أسعار خاطئة',
       desc: 'يفحص هذا الشريط توقيت جلسة البورصة المصرية والأمريكية الفعلي وحداثة السعر بالثانية، وينبهك فوراً إذا كان السوق مغلقاً أو السعر خارج منطقة الشراء الآمنة.'
     },
     {
+      targetId: 'tour-sessions',
+      targetTab: 'dashboard',
+      badge: '3 / 8 — مواعيد الجلسات',
+      title: 'مواعيد الجلسات: بتفتح إمتى وتقفل إمتى',
+      desc: 'هذا الكارت يقلك الجلسة المفتوحة دلوقتي، والعداد التنازلي للإغلاق، ومواعيد السوق الأمريكي قبل الافتتاح وفي الجلسة العادية وبعد الإغلاق — بتوقيت القاهرة وبتوقيت نيويورك كمان، بدون أي تعقيد.'
+    },
+    {
       targetId: 'tour-gemini-radar',
       targetTab: 'dashboard',
-      badge: '3 / 7 — ترشيحات الشراء الفورية',
+      badge: '4 / 8 — ترشيحات الشراء الفورية',
       title: 'الأسهم المرشحة اليوم بناءً على فائض ميزانيتك الشهرية',
       desc: 'بمجرد دخولك، يعرض لك النظام أفضل الأسهم المرشحة اليوم مع عدد الأسهم الدقيق والتكلفة المحسوبة على قد المبلغ المتبقي من مرتبك بعد الأقساط.'
     },
     {
       targetId: 'tour-watchlist-table',
       targetTab: 'dashboard',
-      badge: '4 / 7 — جدول الأسهم والمراقبة اللحظية',
+      badge: '5 / 8 — جدول الأسهم والمراقبة اللحظية',
       title: 'قائمة المتابعة مع نبض الأسعار الحي ومناطق الدخول',
       desc: 'تومض الأسعار باللون الأخضر أو الأحمر مع كل تحديث تلقائي، ويظهر أمام كل سهم قرار واضح: شراء متدرج، احتفاظ، أو تجنب.'
     },
     {
       targetId: 'tour-buy-sell-roadmap',
       targetTab: 'stock',
-      badge: '5 / 7 — خطة التنفيذ',
+      badge: '6 / 8 — خطة التنفيذ',
       title: 'خريطة التنفيذ: منطقة الشراء، جني الأرباح، ووقف الخسارة',
       desc: 'انتقلنا لصفحة السهم؛ هنا تجد الأرقام المحددة للشراء والبيع بدون أي التباس، مع زر فحص السعر أونلاين مباشرة عبر الويب.'
     },
     {
       targetId: 'tour-masters-council',
       targetTab: 'stock',
-      badge: '6 / 7 — المعايير المؤسسية والكتب الـ 14',
+      badge: '7 / 8 — المعايير المؤسسية والكتب الـ 14',
       title: 'تقييم السهم بمعادلات جراهام ولينش ومينيرفيني وليفرمور',
       desc: 'نتائج الفحص المالي والفني وفق القواعد المستخلصة من أمهات كتب الاستثمار ودليل البورصة المصرية.'
     },
     {
       targetId: 'tour-saved-portfolio',
       targetTab: 'portfolio',
-      badge: '7 / 7 — الميزانية الشهرية وسجل المعاملات',
+      badge: '8 / 8 — الميزانية الشهرية وسجل المعاملات',
       title: 'إدارة مرتب الشهر والأقساط وسجل المحفظة المحفوظ تلقائياً',
       desc: 'تضع هنا دخلك الشهري وأقساطك ليحسب النظام الصافي المتاح للاستثمار ويوزعه لك، مع حفظ دائم لجميع معاملاتك السابقة.'
     }
@@ -4668,19 +4971,38 @@ export default function App() {
            =================================================================== */}
         <div className="bg-[#080b10] text-slate-300 border-b border-slate-800/90 px-3 py-1 sm:px-4 sm:py-1.5 text-[10px] sm:text-[11px]">
           <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3">
-            {/* Left/Right: Live Market Status & USD/EGP Reference */}
+            {/* Left/Right: Live Market Status & USD/EGP Reference — reflects ACTUAL quote-fetch health, not just the timer */}
             <div className="flex flex-wrap items-center gap-3">
-              <span className="inline-flex items-center gap-1.5 font-semibold text-emerald-400">
+              <span
+                className={`inline-flex items-center gap-1.5 font-semibold ${
+                  quotesLive === false ? 'text-amber-400' : 'text-emerald-400'
+                }`}
+                title={
+                  quotesLive === false
+                    ? isRtl
+                      ? 'تعذر جلب أسعار Yahoo Finance — المعروض أسعار مرجعية'
+                      : 'Yahoo Finance quotes unreachable — showing reference prices'
+                    : undefined
+                }
+              >
                 <span
                   className={`w-2 h-2 rounded-full ${
-                    liveStreaming ? 'bg-emerald-400 animate-ping' : 'bg-amber-400'
+                    quotesLive === false
+                      ? 'bg-amber-400'
+                      : liveStreaming
+                        ? 'bg-emerald-400 animate-ping'
+                        : 'bg-amber-400'
                   }`}
                 />
                 <span>
-                  {liveStreaming
+                  {quotesLive === false
                     ? isRtl
-                      ? `متصل أونلاين • تحديث تلقائي كل ${refreshIntervalSec} ثوانٍ (القادم خلال ${secondsToNextSync}ث)`
-                      : `ONLINE • Auto-Sync every ${refreshIntervalSec}s (Next in ${secondsToNextSync}s)`
+                      ? 'أونلاين متعذر — الأسعار مرجعية (مش لحظية)'
+                      : 'Quotes UNREACHABLE — reference prices'
+                    : liveStreaming
+                    ? isRtl
+                      ? `أونلاين • مزامنة Yahoo كل ${refreshIntervalSec} ثوانٍ (القادم خلال ${secondsToNextSync}ث)`
+                      : `Yahoo sync every ${refreshIntervalSec}s (next in ${secondsToNextSync}s)`
                     : isRtl
                     ? 'التحديث التلقائي متوقف مؤقتاً'
                     : 'Auto-Sync Paused'}
@@ -4692,7 +5014,12 @@ export default function App() {
               <span>
                 {isRtl ? 'آخر مزامنة:' : 'Last Sync:'}{' '}
                 <Numeric className="text-white font-bold">{lastRefreshTime}</Numeric>{' '}
-                <span className="text-slate-500 font-mono">({networkLatencyMs}ms • #{syncCount})</span>
+                {quotesLive === true && (
+                  <span className="text-emerald-500 font-mono">✓ Yahoo{lastQuoteSyncMs ? ` • ${lastQuoteSyncMs}ms` : ''}</span>
+                )}
+                {quotesLive !== true && (
+                  <span className="text-amber-500 font-mono">({networkLatencyMs}ms • #{syncCount})</span>
+                )}
               </span>
 
               <span className="text-slate-600 hidden sm:inline">|</span>
@@ -4814,7 +5141,7 @@ export default function App() {
                               </Numeric>
                             </div>
                             <div className="text-slate-400 text-[10px] mt-0.5">
-                              {sym.source} • <Numeric>{fmtPrice(a?.price)} {sym.currency}</Numeric>
+                              {priceSourceMeta(sym, isRtl).label} • <Numeric>{fmtPrice(a?.price)} {sym.currency}</Numeric>
                             </div>
                           </button>
 
@@ -5030,6 +5357,28 @@ export default function App() {
           </div>
         </header>
 
+        {/* Honest quote-source provenance strip — visible only when we CANNOT reach live quotes */}
+        {quotesLive === false && (
+          <div
+            role="alert"
+            className="bg-amber-500/10 border-b border-amber-500/40 px-4 py-2 text-xs text-amber-600 dark:text-amber-400 font-bold"
+          >
+            <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-2">
+              <span>
+                {isRtl
+                  ? '⚠️ مش قادرين نتصل بمصدر الأسعار الأونلاين دلوقتي — كل الأسعار على الشاشة مرجعية، مش لحظية، ولازم تتحقق بنفسك قبل أي أمر شراء/بيع.'
+                  : '⚠️ Live quotes unreachable right now — prices shown are reference, not live. Verify before placing any order.'}
+              </span>
+              <button
+                onClick={() => performLiveMarketSync(true)}
+                className="px-3 py-1.5 rounded-lg bg-amber-500 text-slate-950 font-black text-[11px] hover:bg-amber-400 transition"
+              >
+                {isRtl ? 'تحديث الآن' : 'Retry sync'}
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* ===================================================================
             PRE-TRADE PRICE & TIMING SAFETY GUARD BAR (ALWAYS VISIBLE)
            =================================================================== */}
@@ -5140,6 +5489,151 @@ export default function App() {
                   </div>
                 </div>
               </div>
+            </div>
+          </section>
+
+          {/* ===================================================================
+              ⏰ MARKET SESSIONS — EGX & US open/close, live countdown, simplest possible
+             =================================================================== */}
+          <section
+            id="tour-sessions"
+            aria-label={isRtl ? 'مواعيد الجلسات' : 'Market sessions'}
+            className="rounded-2xl border border-sky-500/25 bg-sky-50/50 dark:bg-sky-400/[0.04] overflow-hidden"
+          >
+            <div className="flex flex-wrap items-center justify-between gap-2 px-4 sm:px-5 py-3 border-b border-sky-500/15">
+              <div className="flex items-center gap-2.5">
+                <span className="text-xl leading-none">⏰</span>
+                <div>
+                  <h2 className="font-black text-sm sm:text-base text-sky-800 dark:text-sky-300 leading-6">
+                    {isRtl ? 'مواعيد الجلسات — تفتح إمتى وتقفل إمتى' : 'Session times — opens & closes'}
+                  </h2>
+                  <p className="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400">
+                    {isRtl
+                      ? 'بتوقيت القاهرة • بتتحدث كل ثانية • الأحد–الخميس بمصر'
+                      : 'Cairo time • 1s heartbeat • Sun–Thu (EGX)'}
+                  </p>
+                </div>
+              </div>
+              <span className="text-[10px] font-bold px-2 py-1 rounded-lg bg-sky-500/10 text-sky-700 dark:text-sky-300 border border-sky-500/25 whitespace-nowrap">
+                {ramadanMode
+                  ? isRtl
+                    ? 'وضع رمضان: EGX لحد 13:30'
+                    : 'Ramadan: EGX till 13:30'
+                  : isRtl
+                    ? 'EGX: 10:00 ← 14:30'
+                    : 'EGX: 10:00 → 14:30'}
+              </span>
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-3 p-3 sm:p-4">
+              {/* 🇪🇬 EGX */}
+              <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0e141d] p-3 sm:p-4 space-y-2">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className="text-lg">🇪🇬</span>
+                    <div className="min-w-0">
+                      <div className="font-extrabold text-xs sm:text-sm">البورصة المصرية (EGX)</div>
+                      <div className="text-[10px] text-slate-500">الأحد–الخميس • إجازة الجمعة والسبت</div>
+                    </div>
+                  </div>
+                  <SessionStateChip state={sessionsModel.egx.state} />
+                </div>
+                <div className="flex items-center justify-between rounded-lg bg-slate-50 dark:bg-slate-800/50 px-3 py-2">
+                  <span className="text-[11px] font-bold text-slate-500">الجلسة الرئيسية</span>
+                  <Numeric className="font-mono font-black text-sm sm:text-base">
+                    {sessionsModel.egx.openStr} ← {sessionsModel.egx.closeStr}
+                  </Numeric>
+                </div>
+                {sessionsModel.egx.state === 'OPEN' && (
+                  <div className="text-center py-1">
+                    <div className="text-[10px] text-slate-500 mb-0.5">متبقي على الإغلاق</div>
+                    <Numeric className="font-mono font-black text-2xl sm:text-3xl text-emerald-500 tracking-wider">
+                      {fmtCountdown(sessionsModel.egx.countdownSec)}
+                    </Numeric>
+                  </div>
+                )}
+                {sessionsModel.egx.state === 'PRE' && (
+                  <div className="text-center py-1">
+                    <div className="text-[10px] text-slate-500 mb-0.5">بتفتح خلال</div>
+                    <Numeric className="font-mono font-black text-2xl sm:text-3xl text-sky-500 tracking-wider">
+                      {fmtCountdown(sessionsModel.egx.countdownSec)}
+                    </Numeric>
+                  </div>
+                )}
+                {sessionsModel.egx.state === 'CLOSED' && (
+                  <div className="text-center text-[11px] font-bold text-slate-500 dark:text-slate-400 py-2">
+                    {sessionsModel.egx.nextOpen} — الساعة <Numeric>{sessionsModel.egx.openStr}</Numeric>
+                  </div>
+                )}
+              </div>
+
+              {/* 🇺🇸 US */}
+              <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0e141d] p-3 sm:p-4 space-y-2">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className="text-lg">🇺🇸</span>
+                    <div className="min-w-0">
+                      <div className="font-extrabold text-xs sm:text-sm">السوق الأمريكي (NYSE + Nasdaq)</div>
+                      <div className="text-[10px] text-slate-500">الاثنين–الجمعة • إجازة السبت والأحد</div>
+                    </div>
+                  </div>
+                  <SessionStateChip state={sessionsModel.us.regularState} />
+                </div>
+                <div className="divide-y divide-slate-100 dark:divide-slate-800 rounded-lg border border-slate-100 dark:border-slate-800 overflow-hidden">
+                  {sessionsModel.us.rows.map((row) => (
+                    <div
+                      key={row.id}
+                      className={`flex items-center justify-between gap-2 px-2.5 py-1.5 text-[11px] ${
+                        row.state === 'OPEN'
+                          ? 'bg-emerald-500/5'
+                          : 'bg-transparent'
+                      }`}
+                    >
+                      <div className="flex items-center gap-1.5 min-w-0">
+                        <span
+                          className={`w-1.5 h-1.5 rounded-full shrink-0 ${
+                            row.state === 'OPEN' ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-700'
+                          }`}
+                        />
+                        <span className="font-bold text-slate-600 dark:text-slate-300">{row.labelAr}</span>
+                      </div>
+                      <div className="text-end">
+                        <Numeric className="font-mono font-black">{row.et} ET</Numeric>
+                        <div className="text-[9px] text-slate-400">
+                          بتوقيت القاهرة: <Numeric>{row.cairo}</Numeric>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                {sessionsModel.us.regularState === 'OPEN' && (
+                  <div className="text-center py-0.5">
+                    <span className="text-[10px] text-slate-500">متبقي على إغلاق الجلسة العادية: </span>
+                    <Numeric className="font-mono font-black text-emerald-500">
+                      {fmtCountdown(sessionsModel.us.rows[1].countdownSec)}
+                    </Numeric>
+                  </div>
+                )}
+                {sessionsModel.us.regularState === 'PRE' && (
+                  <div className="text-center py-0.5">
+                    <span className="text-[10px] text-slate-500">الجلسة العادية بتفتح خلال: </span>
+                    <Numeric className="font-mono font-black text-sky-500">
+                      {fmtCountdown(sessionsModel.us.rows[1].countdownSec)}
+                    </Numeric>
+                  </div>
+                )}
+                {sessionsModel.us.nextOpen && (
+                  <div className="text-center text-[11px] font-bold text-slate-500 dark:text-slate-400">
+                    الجلسة العادية {sessionsModel.us.nextOpen} — 09:30 ET
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="px-4 pb-3 flex flex-wrap gap-x-4 gap-y-1 text-[10px] text-slate-400 dark:text-slate-500 border-t border-sky-500/10 pt-2">
+              <span>🕐 مواعيد ET ↔ القاهرة بتتحسب أوتوماتيك مع التوقيت الصيفي</span>
+              <span>📉 الأسعار متأخرة ~15 دقيقة (بيانات مجانية)</span>
+              <span>📅 الأجازات الرسمية مش محسوبة</span>
             </div>
           </section>
 
@@ -5653,7 +6147,16 @@ export default function App() {
                                     {a.symbol.canonicalId}
                                   </Numeric>
                                   <span>•</span>
-                                  <span>{a.symbol.source}</span>
+                                  <span
+                                    className={
+                                      a.symbol.quoteSource === 'yahoo_live'
+                                        ? 'text-emerald-500 font-bold'
+                                        : 'text-amber-500 font-bold'
+                                    }
+                                    title="مصدر السعر الفعلي"
+                                  >
+                                    {priceSourceMeta(a.symbol, isRtl).label}
+                                  </span>
                                   <span>•</span>
                                   <Numeric>{lastRefreshTime}</Numeric>
                                 </div>
@@ -5912,8 +6415,14 @@ export default function App() {
                   <div className="flex flex-wrap items-center gap-3 text-xs text-slate-400">
                     <span>
                       {isRtl ? 'المصدر:' : 'Source:'}{' '}
-                      <strong className="text-slate-700 dark:text-slate-200">
-                        {currentAnalysis.symbol.source}
+                      <strong
+                        className={
+                          currentAnalysis.symbol.quoteSource === 'yahoo_live'
+                            ? 'text-emerald-600 dark:text-emerald-400'
+                            : 'text-amber-500'
+                        }
+                      >
+                        {priceSourceMeta(currentAnalysis.symbol, isRtl).label}
                       </strong>
                     </span>
                     <span>•</span>
@@ -5925,13 +6434,13 @@ export default function App() {
                     </span>
                     <span>•</span>
                     <span className="text-amber-500 font-semibold">
-                      {currentAnalysis.symbol.delayMinutes > 0
+                      {currentAnalysis.symbol.quoteSource === 'yahoo_live'
                         ? isRtl
-                          ? `بيانات مجانية متأخرة ${currentAnalysis.symbol.delayMinutes} دقيقة`
-                          : `${currentAnalysis.symbol.delayMinutes}m Delayed`
+                          ? 'سعر مجاني من Yahoo Finance — متأخر ~15 دقيقة (مجاني)'
+                          : 'Free Yahoo Finance quote — ~15m delayed'
                         : isRtl
-                        ? 'بيانات لحظية (0 دقيقة تأخير)'
-                        : 'Real-time (0m delay)'}
+                        ? 'سعر مرجعي محفوظ — اضغط «تحديث الآن» للمزامنة'
+                        : 'Stored reference price — press Sync'}
                     </span>
                   </div>
                 </div>
@@ -6301,6 +6810,14 @@ export default function App() {
                           : 'Interactive Chart + Shaded Buy/Sell Zones'}
                       </span>
                     </h3>
+                    <span
+                      className="text-[9px] sm:text-[10px] font-bold px-2 py-1 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/30 max-w-[240px] leading-4"
+                      title={isRtl ? 'الشارت مبني على بيانات مرجعية اصطناعية للأغراض التعليمية' : 'Synthetic reference data for education'}
+                    >
+                      {isRtl
+                        ? '⚠️ الشارت والأرقام التاريخية = محاكاة تعليمية (وليست بيانات تداول رسمية)'
+                        : 'Synthetic educational simulation — not official exchange data'}
+                    </span>
 
                     <div className="flex flex-wrap items-center gap-1.5">
                       {[30, 60, 90].map((barsCount) => (
@@ -8627,14 +9144,14 @@ export default function App() {
                       <Zap className="w-5 h-5" />
                       <span>
                         {isRtl
-                          ? 'مختبر المرحلة 0 التفاعلي وقاطع الدائرة (Live Provider Failover & Phase 0 Probe)'
-                          : 'Interactive Phase 0 Probe & Provider Circuit Breaker Lab'}
+                          ? 'فحص مصادر البيانات — الحقيقة الكاملة عن الكود شغال بيها بجد'
+                          : 'Data Sources — the full truth about what runs'}
                       </span>
                     </h2>
                     <p className="text-xs text-slate-400 mt-0.5">
                       {isRtl
-                        ? 'جرّب فصل أي مصدر بيانات أساسي (محاكاة خطأ 429 Rate Limit) لترى كيف يحول النظام جميع الأسهم تلقائياً للمصدر البديل دون توقف.'
-                        : 'Trip any primary data source below to watch live automatic failover across the app.'}
+                        ? 'اضغط «تشغيل فحص» وسينفذ طلب اتصال حقيقي لكل المصادر ويوريك النتيجة الفعلية — مفيش خطوة مكتوبة «نجاح» من غير طلب حقيقي. الجدول تحت بيوضح إيه المفعّل فعلاً وإيه للعرض فقط.'
+                        : 'Press Run Probe — it performs REAL network calls to every source and reports what actually happened. The table below shows what is actually wired vs display-only.'}
                     </p>
                   </div>
 
@@ -8721,67 +9238,62 @@ export default function App() {
                   </div>
                 )}
 
-                {/* Phase 0 Data Source Validation Table */}
+                {/* Phase 0 Data Source Validation Table — mirrors the ACTUAL code pipeline */}
                 <div className="overflow-x-auto pt-2">
                   <table className="w-full text-xs">
                     <thead className="bg-slate-50 dark:bg-slate-800/60 text-slate-400">
                       <tr>
-                        <th className="py-3 px-3 text-start">{isRtl ? 'المصدر المجاني' : 'Candidate Source'}</th>
-                        <th className="py-3 px-3 text-start">{isRtl ? 'تغطية مصر (EGX)' : 'EGX Coverage'}</th>
-                        <th className="py-3 px-3 text-start">{isRtl ? 'تغطية أمريكا والعالم' : 'US / Global'}</th>
-                        <th className="py-3 px-3 text-start">{isRtl ? 'التأخير والحدود' : 'Delay & Rate Limit'}</th>
-                        <th className="py-3 px-3 text-start">{isRtl ? 'المشاكل المرصودة والقرار الهندسي' : 'Findings & Role Assigned'}</th>
+                        <th className="py-3 px-3 text-start">{isRtl ? 'المصدر' : 'Source'}</th>
+                        <th className="py-3 px-3 text-start">{isRtl ? 'بيعطي إيه' : 'What it provides'}</th>
+                        <th className="py-3 px-3 text-start">{isRtl ? 'التأخير' : 'Delay'}</th>
+                        <th className="py-3 px-3 text-start">{isRtl ? 'الحالة الحقيقية في الكود' : 'Actual status in code'}</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                       <tr>
-                        <td className="py-3 px-3 font-bold text-emerald-400">
-                          TradingView Scanner API (`/egypt/scan`)
-                        </td>
-                        <td className="py-3 px-3">
-                          ممتازة (220+ سهم مصري + مؤشر EGX30 و EGX70 في طلب واحد)
-                        </td>
-                        <td className="py-3 px-3">ممتازة (`/america/scan`, `/uk/scan`)</td>
-                        <td className="py-3 px-3">متأخر 15 دقيقة • بدون مفتاح API</td>
-                        <td className="py-3 px-3 font-semibold text-emerald-400">
-                          ✅ المصدر الأساسي للحظة الأسعار والأساسيات ومؤشر EGX30
+                        <td className="py-3 px-3 font-bold text-emerald-500">Yahoo Finance — طلب مجمع (v7 quote)</td>
+                        <td className="py-3 px-3">أسعار آخر تداول لكل الرموز في طلب واحد: EGX عبر `.CA` (COMI.CA …) + US مباشرة (NVDA …)</td>
+                        <td className="py-3 px-3">~15 دقيقة (مجاني)</td>
+                        <td className="py-3 px-3 font-semibold text-emerald-500">
+                          ✅ المفعّل فعلاً — عبر سلسلة بروكسيات CORS (allorigins ← corsproxy.io ← cors.lol). لو نجح: الأسعار تُحدّث ويظهر طابع «أونلاين مباشر».
                         </td>
                       </tr>
                       <tr>
-                        <td className="py-3 px-3 font-bold text-sky-400">
-                          Yahoo Finance (`yfinance` `.CA`)
-                        </td>
-                        <td className="py-3 px-3">
-                          جيدة للشموع اليومية (`COMI.CA`)، لكن مؤشر `^CASE30` معطوب (يرجع صفاً واحداً فقط)
-                        </td>
-                        <td className="py-3 px-3">ممتازة (`NVDA`, `SHEL.L`, `7203.T`)</td>
-                        <td className="py-3 px-3">15 دقيقة لمصر / لحظي لأمريكا</td>
-                        <td className="py-3 px-3">
-                          ✅ المصدر الأساسي لتاريخ الشموع اليومية (OHLCV) مع تفعيل فلتر الأسهم المجانية
+                        <td className="py-3 px-3 font-bold text-sky-400">open.er-api.com</td>
+                        <td className="py-3 px-3">سعر صرف USD/EGP (مرجعي للسوق)</td>
+                        <td className="py-3 px-3">لحظي تقريباً</td>
+                        <td className="py-3 px-3 font-semibold text-emerald-500">✅ المفعّل فعلاً — اتصال مباشر بدون بروكسي</td>
+                      </tr>
+                      <tr>
+                        <td className="py-3 px-3 font-bold text-amber-400">الأسعار المرجعية المحفوظة (localStorage)</td>
+                        <td className="py-3 px-3">آخر سعر تم سحبه بنجاح (أو سعر مرجعي مبدئي)</td>
+                        <td className="py-3 px-3">حسب آخر مزامنة ناجحة</td>
+                        <td className="py-3 px-3 font-semibold text-amber-500">
+                          ⚠️ احتياطي — لما الاتصال بـ Yahoo يفشل، وبيتدمغ دائماً «سعر مرجعي — مش لحظي» مع بانر أصفر في الأعلى
                         </td>
                       </tr>
                       <tr>
-                        <td className="py-3 px-3 font-bold text-amber-400">
-                          Stooq & Mubasher Info
-                        </td>
-                        <td className="py-3 px-3">
-                          ممتازة لأسماء الشركات بالعربية وإعلانات الكوبونات والأسهم المجانية وتاريخ EGX30
-                        </td>
-                        <td className="py-3 px-3">جيدة للمؤشرات العالمية</td>
-                        <td className="py-3 px-3">نهاية اليوم (EOD) / 15 دقيقة</td>
-                        <td className="py-3 px-3">
-                          ✅ المصدر البديل (Fallback) لتاريخ مؤشر EGX30 وتوثيق التوزيعات
+                        <td className="py-3 px-3 font-bold text-slate-400">TradingView Scanner API (`/egypt/scan`)</td>
+                        <td className="py-3 px-3">مسح EGX كامل + EGX30 + أساسيات</td>
+                        <td className="py-3 px-3">~15 دقيقة</td>
+                        <td className="py-3 px-3 font-semibold text-rose-400">
+                          ❌ مش مفعّل في الكود — المتصفح بيرفضه (مفيش CORS) ولازم backend/proxy أو اشتراك TradingView. اسمه مجرد وصف في بيانات مرجعية
                         </td>
                       </tr>
                       <tr>
-                        <td className="py-3 px-3 font-bold text-purple-400">
-                          Finnhub / Twelve Data (Free Tier)
+                        <td className="py-3 px-3 font-bold text-purple-400">Finnhub / Twelve Data (Free Tier)</td>
+                        <td className="py-3 px-3">أسعار لحظية أمريكية + أخبار</td>
+                        <td className="py-3 px-3">لحظي</td>
+                        <td className="py-3 px-3 font-semibold text-rose-400">
+                          ❌ مش مفعّل — محتاج مفتاح API (ومدفوع للـ EGX). المنصة شغالة من غيره
                         </td>
-                        <td className="py-3 px-3">ضعيفة أو مدفوعة للبورصة المصرية في الباقة المجانية</td>
-                        <td className="py-3 px-3">ممتازة للأسهم الأمريكية والأخبار (60 طلب/دقيقة)</td>
-                        <td className="py-3 px-3">لحظي للسوق الأمريكي</td>
-                        <td className="py-3 px-3">
-                          ✅ المصدر الأساسي للأسهم الأمريكية وعناوين الأخبار المجانية
+                      </tr>
+                      <tr>
+                        <td className="py-3 px-3 font-bold text-teal-300">الشارت التاريخي + الاختبار التاريخي (Backtest)</td>
+                        <td className="py-3 px-3">شموع + مناطق دخول/هدف/وقف + نسبة نجاح مفترضة</td>
+                        <td className="py-3 px-3">—</td>
+                        <td className="py-3 px-3 font-semibold text-amber-500">
+                          ⚠️ محاكاة تعليمية بحتة (بيانات اصطناعية deterministic لكل سهم) — مش بيانات تداول حقيقية. الأسعار فقط هي اللي بتتزامن أونلاين
                         </td>
                       </tr>
                     </tbody>
