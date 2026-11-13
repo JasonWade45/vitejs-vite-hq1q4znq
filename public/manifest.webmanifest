@@ -1,0 +1,19 @@
+{
+  "name": "المرشد الذكي للبورصة — Smart Stock Mentor",
+  "short_name": "مرشد البورصة",
+  "description": "منصة عربية للبورصة المصرية والأسواق العالمية: صافي مرتبك بعد الأقساط، ترشيحات شراء فورية، تحديث تلقائي كل 5–10 ثوانٍ — لكل مستخدم حساب مستقل.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0b0e14",
+  "theme_color": "#0b0e14",
+  "lang": "ar",
+  "dir": "rtl",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
