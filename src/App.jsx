@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import {
   TrendingUp,
   TrendingDown,
@@ -44,7 +44,14 @@ import {
   BookOpen,
   Target,
   ShieldCheck,
-  Wallet
+  Wallet,
+  LogOut,
+  Lock,
+  KeyRound,
+  Eye,
+  EyeOff,
+  UserPlus,
+  LayoutGrid
 } from 'lucide-react';
 
 // ============================================================================
@@ -1682,7 +1689,7 @@ function renderTelegramChartDataURL(analysis) {
   canvas.width = 760;
   canvas.height = 400;
   const ctx = canvas.getContext('2d');
-  if (!ctx) return '';
+  if (!ctx) return null;
 
   ctx.fillStyle = '#090d16';
   ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -1778,6 +1785,48 @@ function renderTelegramChartDataURL(analysis) {
 }
 
 // ============================================================================
+// 5.5 LOCAL AUTH ENGINE (Name + Secret PIN) — per-user isolated local storage
+// ============================================================================
+// NOTE: Credentials are stored ONLY on this device in localStorage as salted
+// hashes (never plaintext, never sent anywhere). This is a local-first personal
+// app; the PIN gates the UI and keeps each user's budget/ledger/chat separate.
+function hashSecret(secret, salt) {
+  const str = `${salt}::${String(secret)}`;
+  let h1 = 0xdeadbeef;
+  let h2 = 0x41c6ce57;
+  for (let i = 0; i < str.length; i++) {
+    const ch = str.charCodeAt(i);
+    h1 = Math.imul(h1 ^ ch, 2654435761);
+    h2 = Math.imul(h2 ^ ch, 1597334677);
+  }
+  h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507);
+  h1 = Math.imul(h1 ^ (h2 >>> 13), 3266489909);
+  h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507);
+  h2 = Math.imul(h2 ^ (h1 >>> 13), 3266489909);
+  return (h2 >>> 0).toString(16).padStart(8, '0') + (h1 >>> 0).toString(16).padStart(8, '0');
+}
+
+const DEFAULT_SEED_PIN = '1234';
+
+const cleanDisplayName = (nameAr, nameEn) =>
+  (nameAr || nameEn || 'صديقي').split('(')[0].trim();
+
+const firstNameOf = (fullName) => cleanDisplayName(fullName).split(/\s+/)[0] || 'صديقي';
+
+const chatStorageKeyFor = (userId) => `${STORAGE_KEYS_CHAT_PREFIX}_${userId || 'guest'}`;
+
+// Each registered account starts with isolated, independent data.
+const buildFreshAccountData = (id, name) => ({
+  id,
+  nameAr: name,
+  nameEn: name,
+  watchlist: ['EGX:COMI', 'NASDAQ:NVDA'],
+  monthlyBudget: JSON.parse(JSON.stringify(DEFAULT_MONTHLY_BUDGET)),
+  trades: [],
+  alerts: []
+});
+
+// ============================================================================
 // 6. USER PROFILES (PERSONALIZED FOR MAHMOUD EL-ASHMAWY) & SIGNAL LEDGER
 // ============================================================================
 const STORAGE_KEYS = {
@@ -1786,8 +1835,10 @@ const STORAGE_KEYS = {
   LEDGER: 'mahmoud_stock_mentor_ledger_v3',
   THEME: 'mahmoud_stock_mentor_theme_v3',
   HIDE_TOUR: 'mahmoud_stock_mentor_hide_tour_v3',
-  CHAT_HISTORY: 'mahmoud_stock_mentor_chat_v3'
+  CHAT_HISTORY: 'mahmoud_stock_mentor_chat_v3',
+  SESSION: 'mahmoud_stock_mentor_session_v1'
 };
+const STORAGE_KEYS_CHAT_PREFIX = STORAGE_KEYS.CHAT_HISTORY;
 
 const DEFAULT_MONTHLY_BUDGET = {
   incomeEgp: 45000,
@@ -1805,6 +1856,8 @@ const USER_PROFILES = [
     id: 'user_mahmoud',
     nameAr: 'محمود العشماوي (الحساب الرئيسي)',
     nameEn: 'Mahmoud El-Ashmawy (Primary)',
+    pinSalt: 'seed-mahmoud-v3',
+    pinHash: hashSecret(DEFAULT_SEED_PIN, 'seed-mahmoud-v3'),
     inviteCode: 'MAHMOUD-VIP-01',
     telegramChatId: '109482910',
     watchlist: ['EGX:COMI', 'EGX:TMGH', 'EGX:SWDY', 'EGX:EFIH', 'NASDAQ:NVDA', 'AMEX:SPY', 'INDEX:EGX30'],
@@ -1825,6 +1878,8 @@ const USER_PROFILES = [
     id: 'user_karim',
     nameAr: 'كريم (صديق - دعوة خاصة)',
     nameEn: 'Karim (Friend Invite)',
+    pinSalt: 'seed-karim-v3',
+    pinHash: hashSecret(DEFAULT_SEED_PIN, 'seed-karim-v3'),
     inviteCode: 'FRIEND-KRM-88',
     telegramChatId: '558291044',
     watchlist: ['EGX:HRHO', 'EGX:ORWE', 'EGX:MASR', 'EGX:EGTS', 'NASDAQ:AAPL', 'NASDAQ:MSFT'],
@@ -1941,6 +1996,34 @@ function loadSavedState(key, fallback) {
   } catch {
     return fallback;
   }
+}
+
+// Migrate users persisted before the PIN system existed — they get the default
+// seed PIN ("1234") so existing installs keep working and can change it later.
+function ensureAccountCredentials(list) {
+  if (!Array.isArray(list)) return USER_PROFILES;
+  return list.map((u) => {
+    if (u && u.pinHash) return u;
+    const salt = (u && u.id) || `legacy-${Math.random().toString(36).slice(2)}`;
+    return { ...u, pinSalt: salt, pinHash: hashSecret(DEFAULT_SEED_PIN, salt) };
+  });
+}
+
+function getStoredSessionUserId() {
+  const session = loadSavedState(STORAGE_KEYS.SESSION, null);
+  return session && session.userId ? session.userId : null;
+}
+
+function persistSession(userId) {
+  try {
+    localStorage.setItem(STORAGE_KEYS.SESSION, JSON.stringify({ userId, ts: Date.now() }));
+  } catch {}
+}
+
+function clearStoredSession() {
+  try {
+    localStorage.removeItem(STORAGE_KEYS.SESSION);
+  } catch {}
 }
 
 // ============================================================================
@@ -2083,6 +2166,471 @@ async function callGeminiAPI({ prompt, systemInstruction, useSearchGrounding = f
 }
 
 // ============================================================================
+// 6.8 AUTH SCREEN — Login & Sign up (Name + Secret PIN), per-user isolation
+// ============================================================================
+const buildDefaultMentorGreeting = (name) => [
+  {
+    role: 'assistant',
+    text: `مرحباً أستاذ ${name}. المنصة متصلة الآن بنظام التحديث التلقائي كل 7 ثوانٍ مع فحص سلامة التوقيت والأسعار قبل الشراء. يمكنك استعراض خطة الشراء والبيع لأي سهم أو التحقق من الأسعار الفورية أونلاين. بياناتك ومعاملاتك ومرتبك محفوظة لك وحدك على هذا الجهاز.`,
+    verifiedNumbers: true
+  }
+];
+
+const AUTH_TICKER_ITEMS = [
+  { sym: 'COMI', price: '84.60', pct: '+0.85%', up: true },
+  { sym: 'TMGH', price: '58.40', pct: '+1.24%', up: true },
+  { sym: 'SWDY', price: '46.20', pct: '+0.62%', up: true },
+  { sym: 'EGX30', price: '30,412', pct: '+0.94%', up: true },
+  { sym: 'NVDA', price: '131.40', pct: '+2.31%', up: true },
+  { sym: 'HRHO', price: '23.15', pct: '-0.42%', up: false },
+  { sym: 'SPY', price: '599.20', pct: '+0.38%', up: true },
+  { sym: 'ORWE', price: '25.60', pct: '-0.18%', up: false },
+  { sym: 'EGX33', price: '2,845', pct: '+0.71%', up: true },
+  { sym: 'AAPL', price: '228.10', pct: '+1.05%', up: true }
+];
+
+const AuthScreen = ({ users, onLogin, onSignup }) => {
+  const [mode, setMode] = useState('login');
+  const [name, setName] = useState('');
+  const [pin, setPin] = useState('');
+  const [confirmPin, setConfirmPin] = useState('');
+  const [showPin, setShowPin] = useState(false);
+  const [error, setError] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+
+  const registeredNames = useMemo(
+    () => users.map((u) => cleanDisplayName(u.nameAr, u.nameEn)),
+    [users]
+  );
+
+  const resetFormFor = (nextMode) => {
+    setMode(nextMode);
+    setError('');
+    setPin('');
+    setConfirmPin('');
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    setError('');
+    const cleanName = name.trim();
+    if (cleanName.length < 2) {
+      setError('اكتب الاسم كما سجّلته (على الأقل حرفين).');
+      return;
+    }
+    if (!/^\d{4,6}$/.test(pin)) {
+      setError('الرقم السري لازم يكون من 4 إلى 6 أرقام فقط.');
+      return;
+    }
+    if (mode === 'signup') {
+      if (pin !== confirmPin) {
+        setError('تأكيد الرقم السري غير مطابق — اكتبه مرة أخرى.');
+        return;
+      }
+    }
+    setSubmitting(true);
+    const result =
+      mode === 'login' ? onLogin(cleanName, pin) : onSignup(cleanName, pin);
+    setSubmitting(false);
+    if (!result || !result.ok) {
+      setError(result?.error || 'تعذر إتمام العملية — حاول مرة أخرى.');
+      return;
+    }
+    // Success: parent swaps the screen to the app shell automatically.
+  };
+
+  const fillDemoAccount = (demoName) => {
+    setMode('login');
+    setName(demoName);
+    setPin(DEFAULT_SEED_PIN);
+    setConfirmPin('');
+    setError('');
+  };
+
+  const inputBase =
+    'w-full rounded-2xl bg-slate-950/60 border border-slate-700/80 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/30 outline-none text-slate-100 placeholder-slate-500 transition text-sm';
+
+  return (
+    <div
+      dir="rtl"
+      className="min-h-screen min-h-[100svh] bg-[#05070c] text-slate-100 flex flex-col relative overflow-hidden"
+    >
+      {/* Ambient glows */}
+      <div className="absolute -top-32 -right-32 w-96 h-96 rounded-full bg-emerald-600/20 blur-3xl auth-glow pointer-events-none" />
+      <div className="absolute -bottom-32 -left-32 w-96 h-96 rounded-full bg-teal-500/10 blur-3xl auth-glow pointer-events-none" />
+
+      {/* Top thin live ticker tape */}
+      <div className="relative border-b border-slate-800/80 bg-black/40 backdrop-blur px-4 py-1.5 text-[11px] overflow-hidden whitespace-nowrap">
+        <div className="ticker-drift inline-flex items-center gap-6 w-max">
+          {[...AUTH_TICKER_ITEMS, ...AUTH_TICKER_ITEMS].map((item, idx) => (
+            <span key={idx} className="inline-flex items-center gap-1.5 font-mono">
+              <span className="text-slate-400 font-bold">{item.sym}</span>
+              <span className="text-slate-200">{item.price}</span>
+              <span className={item.up ? 'text-emerald-400' : 'text-rose-400'}>
+                {item.pct}
+              </span>
+            </span>
+          ))}
+        </div>
+      </div>
+
+      <div className="relative flex-1 grid lg:grid-cols-2 max-w-7xl w-full mx-auto">
+        {/* ====== Brand panel (desktop) ====== */}
+        <div className="hidden lg:flex flex-col justify-center gap-8 p-12 border-l border-slate-800/60">
+          <div className="flex items-center gap-4">
+            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-700 flex items-center justify-center text-white font-mono font-extrabold text-lg tracking-tighter shadow-lg shadow-emerald-500/30 border border-emerald-400/40">
+              EGX
+            </div>
+            <div>
+              <h1 className="text-3xl font-black tracking-tight text-white leading-snug">
+                المرشد الذكي
+                <br />
+                <span className="text-emerald-400">للبورصة المصرية والعالمية</span>
+              </h1>
+              <p className="text-xs text-slate-400 mt-1.5 font-mono">
+                SMART STOCK MENTOR • EGX + US MARKETS
+              </p>
+            </div>
+          </div>
+
+          <p className="text-slate-300 leading-8 text-sm max-w-md">
+            منصة عربية تفهم مرتبك وأقساطك — وتحسبلك <strong className="text-emerald-400">الصافي المتبقي للاستثمار</strong> كل شهر،
+            وتختارلك <strong className="text-emerald-400">أفضل أسهم اليوم</strong> بسعر شراء ووقف خسارة ومستهدف واضح،
+            مع تحديث تلقائي كل <Numeric>5–10</Numeric> ثوانٍ.
+          </p>
+
+          <ul className="space-y-4 text-sm">
+            {[
+              { icon: Wallet, text: 'مرتبك والأقساط واستثمار المتبقي — محفوظة لكل حساب على حدة' },
+              { icon: Zap, text: 'ترشيحات شراء فورية لحظة بلحظة مع حارس سلامة السعر والتوقيت' },
+              { icon: ShieldCheck, text: 'كل مستخدم له بياناته ومعاملاته ومرتبه بشكل مستقل تماماً' },
+              { icon: Sparkles, text: 'جولة إرشادية مضيئة (Spotlight Tour) ووضع مبتدئ يجعلك تكسب من اليوم الأول' }
+            ].map(({ icon: Icon, text }, idx) => (
+              <li key={idx} className="flex items-center gap-3 text-slate-300">
+                <span className="w-9 h-9 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center shrink-0">
+                  <Icon className="w-4.5 h-4.5 text-emerald-400" />
+                </span>
+                <span className="leading-7">{text}</span>
+              </li>
+            ))}
+          </ul>
+
+          <div className="text-[10px] text-slate-500 font-mono border border-slate-800 rounded-xl px-4 py-2.5 max-w-md">
+            ⚠️ بيانات إحصائية وفنية لأغراض تعليمية وإدارة المخاطر — وليست توصية استثمارية مباشرة.
+          </div>
+        </div>
+
+        {/* ====== Auth card ====== */}
+        <div className="flex items-center justify-center p-5 sm:p-8">
+          <div className="w-full max-w-md">
+            {/* Compact brand for mobile */}
+            <div className="lg:hidden flex items-center justify-center gap-3 mb-6">
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-700 flex items-center justify-center text-white font-mono font-extrabold text-sm border border-emerald-400/40 shadow-lg">
+                EGX
+              </div>
+              <div className="text-center">
+                <div className="font-black text-lg text-white leading-6">المرشد الذكي للبورصة</div>
+                <div className="text-[10px] text-slate-500 font-mono">EGX + US • LIVE</div>
+              </div>
+            </div>
+
+            <div className="rounded-3xl border border-slate-800 bg-slate-900/70 backdrop-blur-xl shadow-2xl shadow-black/50 p-6 sm:p-7">
+              {/* Tabs */}
+              <div className="grid grid-cols-2 gap-1.5 p-1.5 rounded-2xl bg-slate-950/70 border border-slate-800 mb-6">
+                <button
+                  onClick={() => resetFormFor('login')}
+                  className={`flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-extrabold transition ${
+                    mode === 'login'
+                      ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-600/30'
+                      : 'text-slate-400 hover:text-slate-200'
+                  }`}
+                >
+                  <Lock className="w-4 h-4" />
+                  تسجيل الدخول
+                </button>
+                <button
+                  onClick={() => resetFormFor('signup')}
+                  className={`flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-extrabold transition ${
+                    mode === 'signup'
+                      ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-600/30'
+                      : 'text-slate-400 hover:text-slate-200'
+                  }`}
+                >
+                  <UserPlus className="w-4 h-4" />
+                  حساب جديد
+                </button>
+              </div>
+
+              <h2 className="text-lg font-black text-white">
+                {mode === 'login' ? 'أهلاً بعودتك 👋' : 'أنشئ حسابك في ثوانٍ'}
+              </h2>
+              <p className="text-[11px] text-slate-400 mt-1 mb-5">
+                {mode === 'login'
+                  ? 'ادخل باسمك والرقم السري — هتلاقي كل بياناتك ومعاملاتك ومرتبك زي ما سبتهم.'
+                  : 'اكتب اسمك والرقم السري (4–6 أرقام). حسابك هيفضل منفصل تماماً عن أي حساب تاني على هذا الجهاز.'}
+              </p>
+
+              <form onSubmit={handleSubmit} className="space-y-4">
+                {/* Name field */}
+                <div>
+                  <label htmlFor="auth-name" className="block text-[11px] font-bold text-slate-400 mb-1.5">
+                    الاسم (كما سجّلته في الحساب)
+                  </label>
+                  <div className="relative">
+                    <User className="w-4 h-4 text-slate-500 absolute top-1/2 -translate-y-1/2 right-4 pointer-events-none" />
+                    <input
+                      id="auth-name"
+                      type="text"
+                      autoComplete="name"
+                      value={name}
+                      onChange={(e) => {
+                        setName(e.target.value);
+                        setError('');
+                      }}
+                      placeholder="مثال: محمود العشماوي"
+                      list="registered-users"
+                      className={`${inputBase} pr-11 pl-4 py-3`}
+                    />
+                    <datalist id="registered-users">
+                      {registeredNames.map((n) => (
+                        <option key={n} value={n} />
+                      ))}
+                    </datalist>
+                  </div>
+                </div>
+
+                {/* PIN field */}
+                <div>
+                  <label htmlFor="auth-pin" className="block text-[11px] font-bold text-slate-400 mb-1.5">
+                    الرقم السري (4–6 أرقام)
+                  </label>
+                  <div className="relative">
+                    <KeyRound className="w-4 h-4 text-slate-500 absolute top-1/2 -translate-y-1/2 right-4 pointer-events-none" />
+                    <input
+                      id="auth-pin"
+                      type={showPin ? 'text' : 'password'}
+                      inputMode="numeric"
+                      autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
+                      maxLength={6}
+                      value={pin}
+                      onChange={(e) => {
+                        setPin(e.target.value.replace(/\D/g, '').slice(0, 6));
+                        setError('');
+                      }}
+                      placeholder="••••"
+                      dir="ltr"
+                      className={`${inputBase} pr-11 pl-12 py-3 text-center tracking-[0.5em] font-mono font-bold`}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPin((v) => !v)}
+                      aria-label={showPin ? 'إخفاء الرقم السري' : 'إظهار الرقم السري'}
+                      className="absolute top-1/2 -translate-y-1/2 left-3 p-1.5 rounded-lg text-slate-500 hover:text-slate-200 transition"
+                    >
+                      {showPin ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Confirm PIN (signup only) */}
+                {mode === 'signup' && (
+                  <div>
+                    <label htmlFor="auth-confirm" className="block text-[11px] font-bold text-slate-400 mb-1.5">
+                      تأكيد الرقم السري
+                    </label>
+                    <div className="relative">
+                      <KeyRound className="w-4 h-4 text-slate-500 absolute top-1/2 -translate-y-1/2 right-4 pointer-events-none" />
+                      <input
+                        id="auth-confirm"
+                        type={showPin ? 'text' : 'password'}
+                        inputMode="numeric"
+                        autoComplete="new-password"
+                        maxLength={6}
+                        value={confirmPin}
+                        onChange={(e) => {
+                          setConfirmPin(e.target.value.replace(/\D/g, '').slice(0, 6));
+                          setError('');
+                        }}
+                        placeholder="••••"
+                        dir="ltr"
+                        className={`${inputBase} pr-11 pl-4 py-3 text-center tracking-[0.5em] font-mono font-bold`}
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* Error banner */}
+                {error && (
+                  <div className="flex items-start gap-2 rounded-2xl border border-rose-500/40 bg-rose-500/10 text-rose-300 text-xs leading-6 px-4 py-3">
+                    <ShieldAlert className="w-4 h-4 mt-0.5 shrink-0" />
+                    <span>{error}</span>
+                  </div>
+                )}
+
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="w-full py-3.5 rounded-2xl bg-gradient-to-l from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-black text-sm shadow-lg shadow-emerald-600/30 transition disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                >
+                  {mode === 'login' ? <Lock className="w-4 h-4" /> : <UserPlus className="w-4 h-4" />}
+                  {mode === 'login' ? 'دخول إلى المنصة' : 'إنشاء الحساب والدخول فوراً'}
+                </button>
+              </form>
+
+              {/* Demo accounts quick-fill */}
+              <div className="mt-5 rounded-2xl border border-slate-800 bg-slate-950/50 p-3.5">
+                <div className="text-[10px] font-bold text-slate-500 mb-2 flex items-center gap-1.5">
+                  <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                  حسابات تجريبية جاهزة (الرقم السري: {DEFAULT_SEED_PIN})
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {users.slice(0, 4).map((u) => (
+                    <button
+                      key={u.id}
+                      onClick={() => fillDemoAccount(cleanDisplayName(u.nameAr, u.nameEn))}
+                      className="text-[11px] font-bold px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-emerald-600/20 hover:text-emerald-300 border border-slate-700 hover:border-emerald-600/50 text-slate-300 transition"
+                    >
+                      {cleanDisplayName(u.nameAr, u.nameEn)}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <p className="mt-4 text-[10px] text-slate-500 text-center leading-5">
+                🔒 الرقم السري يُحفظ كهاش محلياً على هذا الجهاز فقط ولا يُرسل لأي خادم.
+                <br />
+                كل حساب له مرتبه ومعاملاته ومحفظته وتنبيهاته بشكل مستقل تماماً.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ============================================================================
+// 6.9 SALARY FLOW CHART — "مخطط مرتب الشهر" (SVG donut + stacked bar, zero deps)
+// ============================================================================
+const SalarySplitChart = ({ income, living, installments, reserve, investable }) => {
+  const segments = [
+    { label: 'مصاريف المعيشة', labelEn: 'Living expenses', value: Math.max(0, living), color: '#fb7185' },
+    { label: 'الأقساط والالتزامات', labelEn: 'Installments', value: Math.max(0, installments), color: '#fb923c' },
+    { label: 'احتياطي الطوارئ', labelEn: 'Emergency reserve', value: Math.max(0, reserve), color: '#fbbf24' },
+    { label: 'الصافي للاستثمار', labelEn: 'To invest', value: Math.max(0, investable), color: '#34d399' }
+  ];
+  const spent = segments.reduce((acc, s) => acc + s.value, 0);
+  const total = Math.max(Number(income) || 0, spent, 1);
+  const radius = 52;
+  const C = 2 * Math.PI * radius;
+  let offset = 0;
+  const deficit = Math.max(0, spent - (Number(income) || 0));
+
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-12 gap-5 items-center">
+      {/* Donut */}
+      <div className="md:col-span-4 flex justify-center">
+        <svg
+          viewBox="0 0 140 140"
+          className="w-40 h-40 sm:w-44 sm:h-44 -rotate-90"
+          role="img"
+          aria-label="مخطط توزيع مرتب الشهر"
+        >
+          <circle cx="70" cy="70" r={radius} fill="none" stroke="rgba(148,163,184,0.12)" strokeWidth="17" />
+          {segments.map((seg) => {
+            const frac = seg.value / total;
+            if (frac <= 0) return null;
+            const len = Math.max(0, frac * C - 1.5);
+            const dash = `${len} ${C - len}`;
+            const dashOffset = -offset * C;
+            offset += frac;
+            return (
+              <circle
+                key={seg.label}
+                cx="70"
+                cy="70"
+                r={radius}
+                fill="none"
+                stroke={seg.color}
+                strokeWidth="17"
+                strokeDasharray={dash}
+                strokeDashoffset={dashOffset}
+                strokeLinecap="round"
+                className="transition-all duration-700"
+              />
+            );
+          })}
+          <text x="70" y="60" textAnchor="middle" transform="rotate(90 70 70)" className="fill-slate-400" fontSize="8" fontWeight="700">
+            الصافي للاستثمار
+          </text>
+          <text x="70" y="76" textAnchor="middle" transform="rotate(90 70 70)" className="fill-emerald-400" fontSize="13" fontWeight="800" fontFamily="'JetBrains Mono', monospace">
+            {fmtPrice(investable, 0)}
+          </text>
+          <text x="70" y="88" textAnchor="middle" transform="rotate(90 70 70)" className="fill-slate-500" fontSize="7">
+            EGP / شهر
+          </text>
+        </svg>
+      </div>
+
+      {/* Legend + stacked bar */}
+      <div className="md:col-span-8 space-y-2.5">
+        {/* Stacked 100% bar */}
+        <div className="flex h-5 w-full rounded-full overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-900">
+          {segments.map((seg) => {
+            const pct = (seg.value / total) * 100;
+            if (pct <= 0) return null;
+            return (
+              <div
+                key={seg.label}
+                style={{ width: `${pct}%`, backgroundColor: seg.color }}
+                className="h-full transition-all duration-700"
+                title={`${seg.label}: ${fmtPrice(seg.value, 0)} EGP (${pct.toFixed(1)}%)`}
+              />
+            );
+          })}
+        </div>
+
+        <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+          {segments.map((seg) => {
+            const pct = (seg.value / total) * 100;
+            return (
+              <li
+                key={seg.label}
+                className="flex items-center justify-between gap-2 rounded-xl bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 px-3 py-2"
+              >
+                <span className="flex items-center gap-2 min-w-0">
+                  <span
+                    className="w-3 h-3 rounded-sm shrink-0"
+                    style={{ backgroundColor: seg.color }}
+                  />
+                  <span className="font-bold text-slate-700 dark:text-slate-200 truncate">
+                    {seg.label}
+                  </span>
+                </span>
+                <span className="text-end shrink-0">
+                  <Numeric className="font-extrabold text-slate-800 dark:text-slate-100">
+                    {fmtPrice(seg.value, 0)}
+                  </Numeric>
+                  <span className="block text-[10px] text-slate-400 font-mono">
+                    {pct.toFixed(1)}%
+                  </span>
+                </span>
+              </li>
+            );
+          })}
+        </ul>
+
+        {deficit > 0 && (
+          <p className="text-[11px] font-bold text-rose-500 bg-rose-500/10 border border-rose-500/30 rounded-xl px-3 py-2">
+            ⚠️ التزاماتك تتجاوز دخلك بمقدار <Numeric>{fmtPrice(deficit, 0)} EGP</Numeric> — راجع الأقساط أو مصاريف المعيشة قبل التفكير في الاستثمار.
+          </p>
+        )}
+      </div>
+    </div>
+  );
+};
+
+// ============================================================================
 // 7. MAIN INTERACTIVE APPLICATION COMPONENT
 // ============================================================================
 export default function App() {
@@ -2134,13 +2682,19 @@ export default function App() {
   const [phase0ProbeLog, setPhase0ProbeLog] = useState([]);
   const [isProbingPhase0, setIsProbingPhase0] = useState(false);
 
-  // Multi-user state persisted in localStorage (Mahmoud El-Ashmawy is default)
-  const [users, setUsers] = useState(() => loadSavedState(STORAGE_KEYS.USERS, USER_PROFILES));
-  const [currentUserId, setCurrentUserId] = useState('user_mahmoud');
-  const currentUser = useMemo(
-    () => users.find((u) => u.id === currentUserId) || users[0],
-    [users, currentUserId]
+  // Multi-user state persisted in localStorage (migrated to credentialed accounts)
+  const [users, setUsers] = useState(() =>
+    ensureAccountCredentials(loadSavedState(STORAGE_KEYS.USERS, USER_PROFILES))
   );
+  // Real authenticated session — whoever logged in (or signed up) owns an isolated slice of localStorage
+  const [sessionUserId, setSessionUserId] = useState(() => getStoredSessionUserId());
+  const currentUser = useMemo(
+    () => (sessionUserId ? users.find((u) => u.id === sessionUserId) || null : null),
+    [users, sessionUserId]
+  );
+  const displayName = cleanDisplayName(currentUser?.nameAr, currentUser?.nameEn);
+  const firstName = firstNameOf(displayName);
+  const [showMobileMore, setShowMobileMore] = useState(false);
 
   // Market Universe & Live Refresh state (persisted)
   const [symbols, setSymbols] = useState(() => loadSavedState(STORAGE_KEYS.SYMBOLS, INITIAL_SYMBOLS));
@@ -2203,15 +2757,14 @@ export default function App() {
     checkedOrderBookDepth: true
   });
 
-  // Mentor Chat State (persisted)
+  // Mentor Chat State (persisted PER USER — each account has its own history)
   const [mentorChatMessages, setMentorChatMessages] = useState(() =>
-    loadSavedState(STORAGE_KEYS.CHAT_HISTORY, [
-      {
-        role: 'assistant',
-        text: 'مرحباً أستاذ محمود العشماوي. المنصة متصلة الآن بنظام التحديث التلقائي كل 7 ثوانٍ مع فحص سلامة التوقيت والأسعار قبل الشراء. يمكنك استعراض خطة الشراء والبيع لأي سهم أو التحقق من الأسعار الفورية أونلاين.',
-        verifiedNumbers: true
-      }
-    ])
+    loadSavedState(
+      chatStorageKeyFor(sessionUserId),
+      buildDefaultMentorGreeting(
+        firstNameOf(cleanDisplayName(users.find((u) => u.id === sessionUserId)?.nameAr))
+      )
+    )
   );
   const [mentorInput, setMentorInput] = useState('');
   const [isAiLoading, setIsAiLoading] = useState(false);
@@ -2276,11 +2829,97 @@ export default function App() {
     } catch {}
   }, [darkMode]);
 
+  // Persist chat per user + swap histories when the logged-in account changes
   useEffect(() => {
     try {
-      localStorage.setItem(STORAGE_KEYS.CHAT_HISTORY, JSON.stringify(mentorChatMessages.slice(-20)));
+      localStorage.setItem(
+        chatStorageKeyFor(sessionUserId),
+        JSON.stringify(mentorChatMessages.slice(-20))
+      );
     } catch {}
-  }, [mentorChatMessages]);
+  }, [mentorChatMessages, sessionUserId]);
+
+  useEffect(() => {
+    const owner = users.find((u) => u.id === sessionUserId);
+    const name = firstNameOf(cleanDisplayName(owner?.nameAr, owner?.nameEn));
+    setMentorChatMessages(
+      loadSavedState(chatStorageKeyFor(sessionUserId), buildDefaultMentorGreeting(name))
+    );
+  }, [sessionUserId]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ==========================================================================
+  // 🔐 AUTH ACTIONS — login / signup / logout (each account is fully isolated)
+  // ==========================================================================
+  const handleLogin = (rawName, pin) => {
+    const needle = rawName.trim().toLowerCase();
+    const match = users.find((u) =>
+      [u.nameAr, cleanDisplayName(u.nameAr, u.nameEn), u.nameEn, u.id]
+        .filter(Boolean)
+        .map((v) => String(v).trim().toLowerCase())
+        .includes(needle)
+    );
+    if (!match) {
+      return {
+        ok: false,
+        error: 'لا يوجد حساب بهذا الاسم على هذا الجهاز — يمكنك إنشاء حساب جديد من تبويب "حساب جديد".'
+      };
+    }
+    if (hashSecret(pin, match.pinSalt || match.id) !== match.pinHash) {
+      return { ok: false, error: 'الرقم السري غير صحيح. حاول مرة أخرى.' };
+    }
+    persistSession(match.id);
+    setSessionUserId(match.id);
+    setActiveTab('dashboard');
+    setShowMobileMore(false);
+    triggerToast(`أهلاً بعودتك يا ${firstNameOf(cleanDisplayName(match.nameAr, match.nameEn))}! 👋`);
+    return { ok: true };
+  };
+
+  const handleSignup = (rawName, pin) => {
+    const cleanName = rawName.trim().replace(/\s+/g, ' ');
+    const needle = cleanName.toLowerCase();
+    const taken = users.some((u) =>
+      [u.nameAr, cleanDisplayName(u.nameAr, u.nameEn), u.nameEn]
+        .filter(Boolean)
+        .map((v) => String(v).trim().toLowerCase())
+        .includes(needle)
+    );
+    if (taken) {
+      return { ok: false, error: 'يوجد حساب بهذا الاسم بالفعل — سجّل الدخول بدلاً من ذلك.' };
+    }
+    const salt = `user_${Date.now()}`;
+    const fresh = {
+      ...buildFreshAccountData(salt, cleanName),
+      id: salt,
+      pinSalt: salt,
+      pinHash: hashSecret(pin, salt),
+      inviteCode: `${(cleanName.split(' ')[0] || 'USER')
+        .toUpperCase()
+        .replace(/[^A-Z0-9\u0600-\u06FF]/g, '')
+        .slice(0, 6)}-${Math.floor(1000 + Math.random() * 9000)}`,
+      telegramChatId: ''
+    };
+    setUsers((prev) => [...prev, fresh]);
+    persistSession(fresh.id);
+    setSessionUserId(fresh.id);
+    setActiveTab('dashboard');
+    setShowMobileMore(false);
+    // New account → replay the guided spotlight tour with a clean slate
+    setTourStep(0);
+    setShowWelcomeTour(true);
+    try {
+      localStorage.setItem(STORAGE_KEYS.HIDE_TOUR, JSON.stringify(false));
+    } catch {}
+    return { ok: true };
+  };
+
+  const handleLogout = () => {
+    clearStoredSession();
+    setSessionUserId(null);
+    setActiveTab('dashboard');
+    setShowMobileMore(false);
+    triggerToast(isRtl ? 'تم تسجيل الخروج بأمان. نراك قريباً! 🌙' : 'Signed out safely. See you soon!');
+  };
 
   const handleCloseWelcomeTour = () => {
     setShowWelcomeTour(false);
@@ -2294,13 +2933,7 @@ export default function App() {
     );
   };
 
-  useEffect(() => {
-    const link = document.createElement('link');
-    link.rel = 'stylesheet';
-    link.href =
-      'https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap';
-    document.head.appendChild(link);
-  }, []);
+  // Fonts are loaded via index.html (Cairo + JetBrains Mono) — no duplicate injection here.
 
   // ==========================================================================
   // ⚡ REAL ONLINE PRICE SYNC + 5-10 SECOND AUTOMATIC HEARTBEAT ENGINE
@@ -2394,14 +3027,16 @@ export default function App() {
     }
   };
 
-  // Run initial sync on mount
+  // Run initial sync on mount (and right after login)
   useEffect(() => {
+    if (!sessionUserId) return; // no session → auth screen, no market traffic
     performLiveMarketSync(false);
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sessionUserId]);
 
   // 1-second heartbeat timer that triggers auto-refresh every `refreshIntervalSec` (5s / 7s / 10s)
   useEffect(() => {
-    if (!liveStreaming) return;
+    if (!liveStreaming || !sessionUserId) return;
     const timer = setInterval(() => {
       setSecondsToNextSync((prev) => {
         if (prev <= 1) {
@@ -2412,7 +3047,7 @@ export default function App() {
       });
     }, 1000);
     return () => clearInterval(timer);
-  }, [liveStreaming, refreshIntervalSec, selectedSymbolId]);
+  }, [liveStreaming, refreshIntervalSec, selectedSymbolId, sessionUserId]);
 
   // Verify Live Prices Online via Google Search Grounding (Gemini API with google_search tool)
   const handleVerifyLivePricesOnline = async () => {
@@ -2421,7 +3056,7 @@ export default function App() {
     const res = await callGeminiAPI({
       prompt: `ابحث الآن على الويب عن أحدث سعر تداول لسهم ${a.symbol.nameAr} (${a.symbol.ticker} / ${a.symbol.yahooTicker}) في ${a.symbol.exchange}، وكذلك مؤشر EGX30 وسعر الدولار مقابل الجنيه المصري اليوم، وقارن ذلك بالسعر المسجل في المنصة (${a.price} ${a.symbol.currency}) مع توضيح حالة الجلسة الآن.`,
       systemInstruction:
-        'أنت مدقق أسعار مالي مباشر للأستاذ محمود العشماوي. استخدم بحث جوجل لجلب أحدث سعر إغلاق أو تداول متاح بدقة، واذكر المصدر والتوقيت بوضوح دون أي مبالغة.',
+        `أنت مدقق أسعار مالي مباشر للأستاذ ${displayName}. استخدم بحث جوجل لجلب أحدث سعر إغلاق أو تداول متاح بدقة، واذكر المصدر والتوقيت بوضوح دون أي مبالغة.`,
       useSearchGrounding: true,
       fallbackFn: () =>
         `تم فحص السهم ${a.symbol.nameAr} (${a.symbol.canonicalId}):\n• السعر المعتمد في المنصة: ${fmtPrice(a.price)} ${a.symbol.currency} (المصدر: ${a.symbol.source}).\n• سعر صرف الدولار المرجعي المحدث: ${usdEgpRate} EGP.\n• نطاق الشراء الآمن المحسوب (ATR): ${fmtPrice(a.signal.entryZone[0])} - ${fmtPrice(a.signal.entryZone[1])} ${a.symbol.currency}.\n• نصيحة التنفيذ: التزم دائماً بالأوامر محددة السعر (Limit Orders) داخل منطقة الشراء ولا تنفذ أوامر سوق مفتوحة خارج ساعات الجلسة.`
@@ -2477,14 +3112,14 @@ export default function App() {
   // 💰 MAHMOUD'S MONTHLY INCOME, INSTALLMENTS & SURPLUS INVESTMENT PLANNER
   // ==========================================================================
   const userBudget = useMemo(
-    () => currentUser.monthlyBudget || DEFAULT_MONTHLY_BUDGET,
+    () => currentUser?.monthlyBudget || DEFAULT_MONTHLY_BUDGET,
     [currentUser]
   );
 
   const updateMonthlyBudget = (updater) => {
     setUsers((prev) =>
       prev.map((u) => {
-        if (u.id !== currentUser.id) return u;
+        if (!currentUser || u.id !== currentUser.id) return u;
         const currentB = u.monthlyBudget || DEFAULT_MONTHLY_BUDGET;
         const nextB = typeof updater === 'function' ? updater(currentB) : { ...currentB, ...updater };
         return { ...u, monthlyBudget: nextB };
@@ -2639,16 +3274,16 @@ export default function App() {
     };
 
     const result = await callGeminiAPI({
-      prompt: `الأستاذ محمود العشماوي أدخل ميزانيته الشهرية التالية:\n${JSON.stringify(planPayload)}\nاشرح له خطة عملية ومباشرة لكيفية استثمار المبلغ المتبقي الصافي (${budgetAllocationPlan.netInvestableEgp} جنيه) هذا الشهر، ووضح له لماذا تم تقسيم المبلغ على هذه الأسهم، وكيف يشتريها على دفعات بأمان دون التأثير على أقساطه أو احتياطي الطوارئ.`,
+      prompt: `الأستاذ ${displayName} أدخل ميزانيته الشهرية التالية:\n${JSON.stringify(planPayload)}\nاشرح له خطة عملية ومباشرة لكيفية استثمار المبلغ المتبقي الصافي (${budgetAllocationPlan.netInvestableEgp} جنيه) هذا الشهر، ووضح له لماذا تم تقسيم المبلغ على هذه الأسهم، وكيف يشتريها على دفعات بأمان دون التأثير على أقساطه أو احتياطي الطوارئ.`,
       systemInstruction:
-        'أنت المستشار المالي الشخصي للأستاذ محمود العشماوي، تجمع بين حكمة مورجان هاوسل (سيكولوجية المال) وشهاب إسماعيل (المستثمر المتألق) وبنيامين جراهام. التزم حرفياً بالأرقام الموجودة في JSON المرفق.',
+        `أنت المستشار المالي الشخصي للأستاذ ${displayName}، تجمع بين حكمة مورجان هاوسل (سيكولوجية المال) وشهاب إسماعيل (المستثمر المتألق) وبنيامين جراهام. التزم حرفياً بالأرقام الموجودة في JSON المرفق.`,
       fallbackFn: () => {
         const lines = budgetAllocationPlan.allocations.map(
           (item) =>
             `• **${item.analysis.symbol.nameAr} (${item.analysis.symbol.ticker} — بنسبة ${item.weightPct}%):** خصصنا له **${fmtPrice(item.actualCost, 0)} EGP** لشراء **${item.shares} سهم** داخل منطقة الدخول (**${fmtPrice(item.analysis.signal.entryZone[0])} - ${fmtPrice(item.analysis.signal.entryZone[1])} EGP**). الهدف الأول **${fmtPrice(item.analysis.signal.target1Zone[0])} EGP** (ربح متوقع **+${fmtPrice(item.expectedProfitAtT1, 0)} EGP**) ووقف الخسارة **${fmtPrice(item.analysis.signal.stopZone[0])} EGP**.`
         );
         return (
-          `💰 **خطة Gemini الذكية لاستثمار فائض مرتب الأستاذ محمود العشماوي هذا الشهر:**\n\n` +
+          `💰 **خطة Gemini الذكية لاستثمار فائض مرتب الأستاذ ${displayName} هذا الشهر:**\n\n` +
           `1️⃣ **ملخص الميزانية والأمان المالي (قاعدة مورجان هاوسل):**\n` +
           `• إجمالي الدخل الشهري: **${fmtPrice(budgetAllocationPlan.income, 0)} EGP**.\n` +
           `• إجمالي الأقساط (${userBudget.installments.length} أقساط) ومصاريف المعيشة: **${fmtPrice(budgetAllocationPlan.totalObligations, 0)} EGP**.\n` +
@@ -2704,11 +3339,11 @@ export default function App() {
     };
 
     const result = await callGeminiAPI({
-      prompt: `اعقد جلسة نقاش وحكم استثماري للأستاذ محمود العشماوي حول سهم ${a.symbol.nameAr} (${a.symbol.canonicalId}) بين عمالقة الكتب الاستثمارية بناءً على هذه الأرقام الحقيقية فقط:\n${JSON.stringify(payload)}\nقسّم التقرير إلى:\n1) رأي مدرسة القيمة والنمو (بنيامين جراهام + بيتر لينش + فيليب فيشر)\n2) رأي مدرسة التحليل الفني والزخم (مارك مينيرفيني + جون ميرفي + جيسي ليفرمور)\n3) رأي مدرسة الانضباط النفسي وإدارة المخاطر (مارك دوجلاس + مورجان هاوسل)\n4) نصيحة فقه البورصة المصرية وإدارة الثروة المحلية (شهاب إسماعيل + محمد سعيد المهدي + دليل EGX Hit the Book)\n5) القرار النهائي المتفق عليه للأستاذ محمود العشماوي (إمتى يشتري وإمتى يبيع).`,
+      prompt: `اعقد جلسة نقاش وحكم استثماري للأستاذ ${displayName} حول سهم ${a.symbol.nameAr} (${a.symbol.canonicalId}) بين عمالقة الكتب الاستثمارية بناءً على هذه الأرقام الحقيقية فقط:\n${JSON.stringify(payload)}\nقسّم التقرير إلى:\n1) رأي مدرسة القيمة والنمو (بنيامين جراهام + بيتر لينش + فيليب فيشر)\n2) رأي مدرسة التحليل الفني والزخم (مارك مينيرفيني + جون ميرفي + جيسي ليفرمور)\n3) رأي مدرسة الانضباط النفسي وإدارة المخاطر (مارك دوجلاس + مورجان هاوسل)\n4) نصيحة فقه البورصة المصرية وإدارة الثروة المحلية (شهاب إسماعيل + محمد سعيد المهدي + دليل EGX Hit the Book)\n5) القرار النهائي المتفق عليه للأستاذ ${displayName} (إمتى يشتري وإمتى يبيع).`,
       systemInstruction:
-        'أنت مجلس حكماء الاستثمار الشخصي للأستاذ محمود العشماوي. تحدث بلغة عربية عميقة وواضحة ومباشرة، والتزم تماماً بالأرقام المرفقة في JSON دون اختراع أي رقم.',
+        `أنت مجلس حكماء الاستثمار الشخصي للأستاذ ${displayName}. تحدث بلغة عربية عميقة وواضحة ومباشرة، والتزم تماماً بالأرقام المرفقة في JSON دون اختراع أي رقم.`,
       fallbackFn: () =>
-        `🏛️ **مضبطة جلسة مجلس حكماء الاستثمار للأستاذ محمود العشماوي حول سهم ${a.symbol.nameAr} (${a.symbol.canonicalId}):**\n\n` +
+        `🏛️ **مضبطة جلسة مجلس حكماء الاستثمار للأستاذ ${displayName} حول سهم ${a.symbol.nameAr} (${a.symbol.canonicalId}):**\n\n` +
         `1️⃣ **مدرسة القيمة والنمو (بنيامين جراهام & بيتر لينش & فيليب فيشر):**\n` +
         `• ${council.graham.verdictAr}\n` +
         `• ${council.lynch.verdictAr}\n\n` +
@@ -2719,7 +3354,7 @@ export default function App() {
         `• ${council.douglas.verdictAr}\n\n` +
         `4️⃣ **قواعد السوق المصري وإدارة الثروة (دليل EGX Hit the Book & شهاب إسماعيل & المهدي):**\n` +
         `• ${council.egxLocal.verdictAr}\n\n` +
-        `🎯 **الخلاصة التنفيذية الموحدة للأستاذ محمود:**\n` +
+        `🎯 **الخلاصة التنفيذية الموحدة للأستاذ ${firstName}:**\n` +
         `• **نطاق الشراء المتدرج:** **${fmtPrice(a.signal.entryZone[0], dec)} - ${fmtPrice(a.signal.entryZone[1], dec)} ${a.symbol.currency}** على دفعات.\n` +
         `• **نطاق جني الأرباح:** **${fmtPrice(a.signal.target1Zone[0], dec)} - ${fmtPrice(a.signal.target1Zone[1], dec)} ${a.symbol.currency}** ثم **${fmtPrice(a.signal.target2Zone[0], dec)}**.\n` +
         `• **خط الدفاع الصارم (وقف الخسارة):** كسر **${fmtPrice(a.signal.stopZone[0], dec)} ${a.symbol.currency}** بإغلاق يومي.`
@@ -2775,22 +3410,30 @@ export default function App() {
     };
   };
 
-  // Initialize Telegram welcome message with a real chart snapshot for Mahmoud
+  // Initialize Telegram welcome message with a real chart snapshot (per signed-in user)
   useEffect(() => {
-    if (tgMessages.length === 0 && allAnalyses['EGX:COMI']) {
-      const comiAnalysis = allAnalyses['EGX:COMI'];
-      const chartUrl = renderTelegramChartDataURL(comiAnalysis);
-      setTgMessages([
+    if (!currentUser) return; // auth screen handles its own UX — no app side effects
+    const comiAnalysis = allAnalyses['EGX:COMI'];
+    let chartUrl = null;
+    try {
+      chartUrl = comiAnalysis ? renderTelegramChartDataURL(comiAnalysis) : null;
+    } catch {
+      chartUrl = null; // canvas unavailable — send text-only welcome
+    }
+    const timeNow = new Date().toTimeString().slice(0, 5);
+    setTgMessages((prev) => {
+      if (prev.length > 0) return prev;
+      return [
         {
-          id: 1,
+          id: Date.now(),
           sender: 'bot',
-          time: '14:31',
-          text: `👋 أهلاً بك يا أستاذ محمود العشماوي!\nتم ربط حسابك بنجاح عبر الكود (${currentUser.inviteCode}).\n\nجرّب الأوامر الفورية:\n• /signal COMI — شارت فني + إمتى تشتري وإمتى تبيع + نسبة النجاح التاريخية\n• /watchlist — ملخص قائمة متابعتك\n• /portfolio — موقف محفظتك ومعاملاتك المحفوظة\n• /buy COMI 100 84.50 — تسجيل عملية شراء فورية`,
+          time: timeNow,
+          text: `👋 أهلاً بك يا أستاذ ${firstName}!\nتم ربط حسابك بنجاح عبر الكود (${currentUser.inviteCode}).\n\nجرّب الأوامر الفورية:\n• /signal COMI — شارت فني + إمتى تشتري وإمتى تبيع + نسبة النجاح التاريخية\n• /watchlist — ملخص قائمة متابعتك\n• /portfolio — موقف محفظتك ومعاملاتك المحفوظة\n• /buy COMI 100 84.50 — تسجيل عملية شراء فورية`,
           chartUrl
         }
-      ]);
-    }
-  }, []);
+      ];
+    });
+  }, [sessionUserId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleRefreshPrices = () => {
     const nextJitter = {};
@@ -2802,7 +3445,7 @@ export default function App() {
     setLastRefreshTime(now.toTimeString().split(' ')[0]);
     triggerToast(
       isRtl
-        ? 'تم تحديث الأسعار وإعادة حساب مناطق الشراء والبيع يا أستاذ محمود'
+        ? `تم تحديث الأسعار وإعادة حساب مناطق الشراء والبيع يا أستاذ ${firstName}`
         : 'All quotes refreshed & indicators recomputed'
     );
   };
@@ -2838,7 +3481,7 @@ export default function App() {
         currency: newCustomTicker.currency,
         nameAr: newCustomTicker.nameAr.trim() || `سهم ${rawTicker} (${newCustomTicker.exchange})`,
         nameEn: `${rawTicker} (${newCustomTicker.exchange})`,
-        sectorAr: 'مضاف بواسطة محمود العشماوي',
+        sectorAr: `مضاف بواسطة ${displayName}`,
         sectorEn: 'User Added Symbol',
         basePrice: Math.max(1, parseFloat(newCustomTicker.basePrice) || 25),
         drift: 0.001,
@@ -2900,11 +3543,11 @@ export default function App() {
     }));
 
     const result = await callGeminiAPI({
-      prompt: `قم بإعداد تقرير "رادار Gemini اليومي" للأستاذ محمود العشماوي بناءً على قائمة متابعته التالية فقط:\n${JSON.stringify(summaryPayload)}\nرتب التقرير في 3 نقاط واضحة: 1) أفضل سهم مرشح للشراء اليوم مع نطاق الشراء والهدف والوقف، 2) سهم للمراقبة أو الاحتفاظ، 3) سهم يجب الحذر منه، مع نصيحة إدارة مخاطر.`,
+      prompt: `قم بإعداد تقرير "رادار Gemini اليومي" للأستاذ ${displayName} بناءً على قائمة متابعته التالية فقط:\n${JSON.stringify(summaryPayload)}\nرتب التقرير في 3 نقاط واضحة: 1) أفضل سهم مرشح للشراء اليوم مع نطاق الشراء والهدف والوقف، 2) سهم للمراقبة أو الاحتفاظ، 3) سهم يجب الحذر منه، مع نصيحة إدارة مخاطر.`,
       systemInstruction:
-        'أنت المستشار المالي الشخصي للأستاذ محمود العشماوي. تحدث بلغة عربية مصرية احترافية وودودة، والتزم حرفياً بالأرقام الموجودة في JSON المرفق دون اختراع أي سعر.',
+        `أنت المستشار المالي الشخصي للأستاذ ${displayName}. تحدث بلغة عربية مصرية احترافية وودودة، والتزم حرفياً بالأرقام الموجودة في JSON المرفق دون اختراع أي سعر.`,
       fallbackFn: () =>
-        `🌟 **ملخص رادار Gemini الذكي اليومي للأستاذ محمود العشماوي:**\n\n` +
+        `🌟 **ملخص رادار Gemini الذكي اليومي للأستاذ ${displayName}:**\n\n` +
         `1️⃣ **أقوى فرصة مرشحة للشراء المتدرج اليوم:**\n` +
         `• **${topPick.symbol.nameAr} (${topPick.symbol.canonicalId}):** يتصدر قائمتك بدرجة فنية **+${topPick.signal.compositeScore}/100** ونسبة نجاح تاريخية **${topPick.backtest.winRatePct}%** (عينة ${topPick.backtest.sampleSize} صفقة سابقة).\n` +
         `• **إمتى تشتري؟** داخل نطاق **${fmtPrice(topPick.signal.entryZone[0])} - ${fmtPrice(topPick.signal.entryZone[1])} ${topPick.symbol.currency}**.\n` +
@@ -2947,13 +3590,13 @@ export default function App() {
     };
 
     const result = await callGeminiAPI({
-      prompt: `اشرح للأستاذ محمود العشماوي خطة التداول الكاملة على سهم ${a.symbol.nameAr} (${a.symbol.canonicalId}) بناءً على هذه البيانات:\n${JSON.stringify(payload)}\nوضح بالتفصيل: 1) إمتى يشتري وبأي شروط؟ 2) إمتى يبيع لجني الأرباح؟ 3) إمتى يبيع فوراً لوقف الخسارة؟ 4) مدى قوة الإشارة تاريخياً.`,
+      prompt: `اشرح للأستاذ ${displayName} خطة التداول الكاملة على سهم ${a.symbol.nameAr} (${a.symbol.canonicalId}) بناءً على هذه البيانات:\n${JSON.stringify(payload)}\nوضح بالتفصيل: 1) إمتى يشتري وبأي شروط؟ 2) إمتى يبيع لجني الأرباح؟ 3) إمتى يبيع فوراً لوقف الخسارة؟ 4) مدى قوة الإشارة تاريخياً.`,
       systemInstruction:
-        'أنت مرشد التداول الشخصي للأستاذ محمود العشماوي. قدم إجابة عملية ومباشرة وواضحة جداً بالعربية دون اختراع أي أرقام خارج JSON المرفق.',
+        `أنت مرشد التداول الشخصي للأستاذ ${displayName}. قدم إجابة عملية ومباشرة وواضحة جداً بالعربية دون اختراع أي أرقام خارج JSON المرفق.`,
       fallbackFn: () => {
         const decPlan = getActionableDecision(a);
         return (
-          `🎯 **خطة Gemini التنفيذية للأستاذ محمود على سهم ${a.symbol.nameAr} (${a.symbol.canonicalId}):**\n\n` +
+          `🎯 **خطة Gemini التنفيذية للأستاذ ${firstName} على سهم ${a.symbol.nameAr} (${a.symbol.canonicalId}):**\n\n` +
           `• **القرار الفني الحالي:** ${decPlan.badgeAr} (التقييم المركب **${a.signal.compositeScore}/100** | نسبة العائد للمخاطرة **${a.signal.rrRatio}:1**).\n\n` +
           `🟢 **1. إمتى وإزاي تشتري؟**\n` +
           `${decPlan.whenToBuyAr}\n\n` +
@@ -2996,12 +3639,12 @@ export default function App() {
     });
 
     const result = await callGeminiAPI({
-      prompt: `قم بمراجعة محفظة الأستاذ محمود العشماوي ومعاملاته المحفوظة التالية:\n${JSON.stringify(holdingsData)}\nقدم له نصيحة واضحة لكل سهم في محفظته: هل يحتفظ به، أم يجني جزءاً من الأرباح، أم يرفع مستوى وقف الخسارة لحماية أرباحه؟`,
+      prompt: `قم بمراجعة محفظة الأستاذ ${displayName} ومعاملاته المحفوظة التالية:\n${JSON.stringify(holdingsData)}\nقدم له نصيحة واضحة لكل سهم في محفظته: هل يحتفظ به، أم يجني جزءاً من الأرباح، أم يرفع مستوى وقف الخسارة لحماية أرباحه؟`,
       systemInstruction:
-        'أنت مستشار إدارة المخاطر والمحافظ للأستاذ محمود العشماوي. التزم بالأرقام الحقيقية لمحفظته وقدم نصيحة عملية لكل مركز مفتوح.',
+        `أنت مستشار إدارة المخاطر والمحافظ للأستاذ ${displayName}. التزم بالأرقام الحقيقية لمحفظته وقدم نصيحة عملية لكل مركز مفتوح.`,
       fallbackFn: () => {
         if (holdingsData.length === 0) {
-          return 'محفظتك الحالية خالية من المراكز المفتوحة يا أستاذ محمود. يمكنك تسجيل أي معاملة شراء من النموذج المجاور وسيتم حفظها تلقائياً.';
+          return `محفظتك الحالية خالية من المراكز المفتوحة يا أستاذ ${firstName}. يمكنك تسجيل أي معاملة شراء من النموذج المجاور وسيتم حفظها تلقائياً.`;
         }
         const lines = holdingsData.map((h) => {
           const action =
@@ -3013,7 +3656,7 @@ export default function App() {
           return `• **${h.nameAr} (${h.symbol}):** الكمية **${h.qty}** سهم بمتوسط تكلفة **${fmtPrice(h.avgCost)} ${h.currency}** والسعر الحالي **${fmtPrice(h.currentPrice)} ${h.currency}** — ${action}`;
         });
         return (
-          `🩺 **تقرير فحص Gemini الشامل لمحفظة الأستاذ محمود العشماوي:**\n\n` +
+          `🩺 **تقرير فحص Gemini الشامل لمحفظة الأستاذ ${displayName}:**\n\n` +
           lines.join('\n\n') +
           `\n\n🛡️ **خلاصة المخاطرة:** إجمالي المخاطرة المحسوبة في حال ضرب جميع مستويات الوقف لا يتجاوز الحدود الآمنة، وجميع معاملاتك محفوظة تلقائياً.`
         );
@@ -3042,7 +3685,7 @@ export default function App() {
     const buildDeterministicReply = () => {
       if (q.includes('إمتى أشتري') || q.includes('امتى اشتري') || q.includes('أبيع')) {
         return (
-          `🎯 **إجابة مباشرة للأستاذ محمود بخصوص ${a.symbol.nameAr} (${a.symbol.canonicalId}):**\n` +
+          `🎯 **إجابة مباشرة للأستاذ ${firstName} بخصوص ${a.symbol.nameAr} (${a.symbol.canonicalId}):**\n` +
           `• **حالة السهم الآن:** ${decPlan.badgeAr} (السعر الحالي **${fmtPrice(a.price, decimals)} ${a.symbol.currency}**).\n` +
           `• **🟢 إمتى تشتري؟** ${decPlan.whenToBuyAr}\n` +
           `• **💰 إمتى تبيع لجني الأرباح؟** ${decPlan.whenToSellProfitAr}\n` +
@@ -3051,7 +3694,7 @@ export default function App() {
       }
       if (q.includes('قارن') || q.toLowerCase().includes('compare')) {
         return (
-          `📊 **مقارنة خاصة للأستاذ محمود (COMI مقابل TMGH):**\n` +
+          `📊 **مقارنة خاصة للأستاذ ${firstName} (COMI مقابل TMGH):**\n` +
           `1️⃣ **البنك التجاري الدولي (EGX:COMI):** السعر **${fmtPrice(comi.price)} EGP** (${fmtPct(comi.changePct)})، الدرجة الفنية **+${comi.signal.compositeScore}/100**، نسبة النجاح التاريخية **${comi.backtest.winRatePct}%** (عينة ${comi.backtest.sampleSize} مرة).\n` +
           `2️⃣ **طلعت مصطفى (EGX:TMGH):** السعر **${fmtPrice(tmgh.price)} EGP** (${fmtPct(tmgh.changePct)})، الدرجة الفنية **+${tmgh.signal.compositeScore}/100**، والسيولة النسبية **${tmgh.indicators.rvol20}x**.\n` +
           `⚠️ **الخلاصة:** سهم COMI أكثر هدوءاً واستقراراً للمحفظة الأساسية، بينما TMGH أعلى في الزخم والتذبذب اليومي (ATR = ${fmtPrice(tmgh.indicators.atr14)} EGP).`
@@ -3059,14 +3702,14 @@ export default function App() {
       }
       if (q.includes('مبتدئ') || q.toLowerCase().includes('beginner')) {
         return (
-          `🎓 **شرح مبسط وواضح يا أستاذ محمود لسهم ${a.symbol.nameAr} (${a.symbol.canonicalId}):**\n` +
+          `🎓 **شرح مبسط وواضح يا أستاذ ${firstName} لسهم ${a.symbol.nameAr} (${a.symbol.canonicalId}):**\n` +
           `• **الاتجاه العام:** السعر الآن **${fmtPrice(a.price, decimals)} ${a.symbol.currency}**. السهم يتداول ${a.price > a.indicators.sma50 ? 'أعلى' : 'أقل'} من متوسط سعره في آخر 50 يوماً (**${fmtPrice(a.indicators.sma50, decimals)}**)، مما يعني أن المشترين ${a.price > a.indicators.sma50 ? 'مسيطرون على الاتجاه' : 'ينتظرون دعماً أقوى'}.\n` +
           `• **منطقة الشراء الذكية:** بدلاً من الشراء بأي سعر، النطاق المحسوب هو **${fmtPrice(a.signal.entryZone[0], decimals)} - ${fmtPrice(a.signal.entryZone[1], decimals)}**، والهدف البيعي الأول **${fmtPrice(a.signal.target1Zone[0], decimals)} - ${fmtPrice(a.signal.target1Zone[1], decimals)}**.\n` +
           `• **صمام الأمان:** إذا نزل السهم وأغلق تحت **${fmtPrice(a.signal.stopZone[0], decimals)}** نخرج بهدوء لحماية السيولة.`
         );
       }
       return (
-        `🔍 **تحليل Gemini لسهم ${a.symbol.nameAr} (${a.symbol.canonicalId}) يا أستاذ محمود:**\n` +
+        `🔍 **تحليل Gemini لسهم ${a.symbol.nameAr} (${a.symbol.canonicalId}) يا أستاذ ${firstName}:**\n` +
         `• **السعر والزخم:** يتحرك السهم عند **${fmtPrice(a.price, decimals)} ${a.symbol.currency}** (${fmtPct(a.changePct)}) مع مؤشر RSI(14) عند **${a.indicators.rsi14}** وسيولة نسبية **${a.indicators.rvol20}x**.\n` +
         `• **خطة الشراء والبيع:** الدخول المقترح **${fmtPrice(a.signal.entryZone[0], decimals)} - ${fmtPrice(a.signal.entryZone[1], decimals)}**، المستهدف **${fmtPrice(a.signal.target1Zone[0], decimals)} - ${fmtPrice(a.signal.target1Zone[1], decimals)}**، ووقف الخسارة **${fmtPrice(a.signal.stopZone[0], decimals)}**.\n` +
         `• **الصدق التاريخي:** نجحت هذه الإشارة بنسبة **${a.backtest.winRatePct}%** خلال **${a.backtest.sampleSize}** مرة سابقة.`
@@ -3074,7 +3717,7 @@ export default function App() {
     };
 
     const factSheet = {
-      user: 'محمود العشماوي',
+      user: `${displayName}`,
       symbol: a.symbol.canonicalId,
       name_ar: a.symbol.nameAr,
       currency: a.symbol.currency,
@@ -3097,9 +3740,9 @@ export default function App() {
     };
 
     const res = await callGeminiAPI({
-      prompt: `سؤال الأستاذ محمود العشماوي: ${q}\n\nبيانات السهم المعتمدة (SignalFactSheet JSON):\n${JSON.stringify(factSheet)}`,
+      prompt: `سؤال الأستاذ ${displayName}: ${q}\n\nبيانات السهم المعتمدة (SignalFactSheet JSON):\n${JSON.stringify(factSheet)}`,
       systemInstruction:
-        'أنت المرشد المالي الشخصي للأستاذ محمود العشماوي. اشرح باللغة العربية المصرية الواضحة إمتى يشتري وإمتى يبيع مع الالتزام الصارم بالأرقام المرفقة في JSON فقط وذكر المخاطر دائماً.',
+        `أنت المرشد المالي الشخصي للأستاذ ${displayName}. اشرح باللغة العربية المصرية الواضحة إمتى يشتري وإمتى يبيع مع الالتزام الصارم بالأرقام المرفقة في JSON فقط وذكر المخاطر دائماً.`,
       fallbackFn: buildDeterministicReply
     });
 
@@ -3182,7 +3825,7 @@ export default function App() {
   // Compute Portfolio Holdings & Risk Analytics for Current User
   const portfolioSummary = useMemo(() => {
     const positionsMap = {};
-    currentUser.trades.forEach((tr) => {
+    (currentUser?.trades || []).forEach((tr) => {
       if (!positionsMap[tr.canonicalId]) {
         positionsMap[tr.canonicalId] = {
           canonicalId: tr.canonicalId,
@@ -3290,7 +3933,7 @@ export default function App() {
     setTradeForm((prev) => ({ ...prev, notes: '' }));
     triggerToast(
       isRtl
-        ? `تم حفظ معاملة ${sym.canonicalId} في سجل معاملاتك الدائم يا أستاذ محمود`
+        ? `تم حفظ معاملة ${sym.canonicalId} في سجل معاملاتك الدائم يا أستاذ ${firstName}`
         : `Trade logged and saved for ${sym.canonicalId}`
     );
   };
@@ -3307,13 +3950,26 @@ export default function App() {
   };
 
   const handleResetSavedData = () => {
-    localStorage.removeItem(STORAGE_KEYS.USERS);
-    localStorage.removeItem(STORAGE_KEYS.SYMBOLS);
-    localStorage.removeItem(STORAGE_KEYS.LEDGER);
-    setUsers(USER_PROFILES);
+    // Scope the reset to the CURRENT account only — never wipe other users on this device
+    if (!currentUser) return;
+    const fresh = buildFreshAccountData(currentUser.id, displayName);
+    setUsers((prev) =>
+      prev.map((u) =>
+        u.id === currentUser.id
+          ? {
+              ...fresh,
+              id: currentUser.id,
+              pinSalt: currentUser.pinSalt,
+              pinHash: currentUser.pinHash,
+              inviteCode: currentUser.inviteCode,
+              telegramChatId: currentUser.telegramChatId
+            }
+          : u
+      )
+    );
     setSymbols(INITIAL_SYMBOLS);
     setSignalLedger(INITIAL_SIGNAL_LEDGER);
-    triggerToast(isRtl ? 'تمت استعادة البيانات الافتراضية لحساب أستاذ محمود' : 'Reset to defaults');
+    triggerToast(isRtl ? `تمت استعادة البيانات الافتراضية لحساب ${firstName} ✓` : 'Reset to defaults');
   };
 
   // Interactive Telegram Bot Command Router
@@ -3493,18 +4149,24 @@ export default function App() {
     }
   ];
 
-  // Automatically navigate to the step's tab, scroll to the target element, and track its spotlight coordinates
+  // Navigate to the step's tab ONLY when the guided step itself changes —
+  // never fight the user's own tab clicks while the tour is open.
+  const lastForcedTourTabRef = useRef(null);
   useEffect(() => {
     if (!showWelcomeTour) {
       setSpotlightRect(null);
+      lastForcedTourTabRef.current = null;
       return;
     }
 
     const stepObj = TOUR_STEPS[tourStep];
     if (!stepObj) return;
 
-    if (activeTab !== stepObj.targetTab) {
+    if (lastForcedTourTabRef.current !== tourStep && activeTab !== stepObj.targetTab) {
+      lastForcedTourTabRef.current = tourStep;
       setActiveTab(stepObj.targetTab);
+    } else {
+      lastForcedTourTabRef.current = tourStep;
     }
 
     let rafId = null;
@@ -3553,6 +4215,30 @@ export default function App() {
     };
   }, [showWelcomeTour, tourStep, activeTab]);
 
+  // ==========================================================================
+  // 🔐 AUTH GATE — without an authenticated session the user only sees the
+  //    login / sign-up screen (no app data is reachable).
+  // ==========================================================================
+  if (!currentUser) {
+    return <AuthScreen users={users} onLogin={handleLogin} onSignup={handleSignup} />;
+  }
+
+  const hourNow = new Date().getHours();
+  const timeGreeting = isRtl
+    ? hourNow < 12
+      ? 'صباح الخير'
+      : 'مساء الخير'
+    : hourNow < 12
+      ? 'Good morning'
+      : 'Good evening';
+  const todayPretty = new Date().toLocaleDateString(isRtl ? 'ar-EG' : 'en-GB', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric'
+  });
+  const currentInitial = (firstName.trim()[0] || 'EG').toUpperCase();
+
   return (
     <div className={darkMode ? 'dark' : ''}>
       <div
@@ -3562,7 +4248,7 @@ export default function App() {
       >
         {/* Toast Feedback Notification */}
         {toastMsg && (
-          <div className="fixed bottom-5 left-1/2 -translate-x-1/2 z-50 px-4 py-2.5 rounded-lg bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-950 text-xs font-bold shadow-xl border border-slate-700 flex items-center gap-2">
+          <div className="fixed bottom-24 lg:bottom-6 left-1/2 -translate-x-1/2 z-50 px-4 py-2.5 rounded-lg bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-950 text-xs font-bold shadow-xl border border-slate-700 flex items-center gap-2 max-w-[92vw]">
             <CheckCircle2 className="w-4 h-4 text-emerald-500" />
             <span>{toastMsg}</span>
           </div>
@@ -3595,7 +4281,8 @@ export default function App() {
                 </div>
               </div>
             ) : (
-              <div className="fixed inset-0 bg-black/75 pointer-events-auto" />
+              // Target not on this tab → keep a soft dim but never block the UI
+              <div className="fixed inset-0 bg-black/45 pointer-events-none" />
             )}
 
             <div
@@ -3605,7 +4292,7 @@ export default function App() {
                 transform: 'translateX(-50%)',
                 ...(spotlightRect && spotlightRect.top > spotlightRect.windowH * 0.48
                   ? { top: '20px' }
-                  : { bottom: '20px' }),
+                  : { bottom: 'calc(84px + env(safe-area-inset-bottom))' }),
                 transition: 'all 0.25s ease'
               }}
               className="w-[94vw] max-w-lg pointer-events-auto rounded-xl bg-white dark:bg-[#11161f] border border-slate-300 dark:border-slate-700 shadow-2xl p-4 space-y-3"
@@ -3757,16 +4444,22 @@ export default function App() {
               <div>
                 <div className="flex items-center gap-2">
                   <h1 className="font-bold text-sm sm:text-base text-slate-900 dark:text-white tracking-tight">
-                    {isRtl ? 'منصة التداول والتحليل الكمي — محمود العشماوي' : 'Ashmawy Quantitative Trading Desk'}
+                    {isRtl ? `منصة التداول والتحليل الكمي — ${displayName}` : `${displayName} · Quantitative Trading Desk`}
                   </h1>
                   <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
                     PRO v3.4
                   </span>
                 </div>
                 <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                  {isRtl
-                    ? 'البورصة المصرية (EGX) والأسواق العالمية • رقابة لحظية على الأسعار والسيولة'
-                    : 'EGX & Global Equities • Real-time Price & Risk Guard'}
+                  <span className="font-bold text-emerald-600 dark:text-emerald-400">
+                    {timeGreeting}، أستاذ {firstName} 👋
+                  </span>
+                  <span className="hidden sm:inline">
+                    {' '}
+                    • {isRtl
+                      ? 'البورصة المصرية (EGX) والأسواق العالمية'
+                      : 'EGX & Global Markets'}
+                  </span>
                 </p>
               </div>
             </div>
@@ -3949,27 +4642,38 @@ export default function App() {
                 <span className="hidden sm:inline">{isRtl ? 'دليل المنصة' : 'Guide'}</span>
               </button>
 
-              {/* Account Switcher */}
-              <div className="flex items-center gap-1 bg-slate-100 dark:bg-[#0b0e14] px-2 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 text-[11px]">
-                <User className="w-3.5 h-3.5 text-slate-500" />
-                <select
-                  value={currentUserId}
-                  onChange={(e) => setCurrentUserId(e.target.value)}
-                  className="bg-transparent font-bold focus:outline-none cursor-pointer"
+              {/* Authenticated User Badge + Sign Out */}
+              <div
+                className="flex items-center gap-1.5 bg-emerald-500/10 dark:bg-emerald-500/10 ps-1.5 pe-1 py-1 rounded-lg border border-emerald-500/30 text-[11px]"
+                title={`${isRtl ? 'الحساب الحالي' : 'Signed in as'}: ${displayName}`}
+              >
+                <div className="w-7 h-7 rounded-full bg-gradient-to-br from-emerald-500 to-teal-700 text-white font-extrabold text-[11px] flex items-center justify-center shadow-sm">
+                  {currentInitial}
+                </div>
+                <div className="hidden md:flex flex-col leading-4">
+                  <span className="font-extrabold text-slate-800 dark:text-emerald-300 max-w-[140px] truncate">
+                    {displayName}
+                  </span>
+                  <span className="text-[9px] text-emerald-600 dark:text-emerald-500 font-semibold">
+                    {isRtl ? 'حساب موقّع ✓' : 'Signed in ✓'}
+                  </span>
+                </div>
+                <button
+                  onClick={handleLogout}
+                  title={isRtl ? 'تسجيل خروج بأمان' : 'Sign out'}
+                  aria-label={isRtl ? 'تسجيل خروج' : 'Sign out'}
+                  className="p-1.5 rounded-lg text-slate-500 dark:text-slate-400 hover:text-rose-500 hover:bg-rose-500/10 transition"
                 >
-                  {users.map((u) => (
-                    <option key={u.id} value={u.id} className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">
-                      {isRtl ? u.nameAr : u.nameEn}
-                    </option>
-                  ))}
-                </select>
+                  <LogOut className="w-4 h-4" />
+                </button>
               </div>
             </div>
           </div>
 
           {/* Primary Navigation Tabs — Organized & Numbered for Beginner Clarity */}
           <div className="max-w-7xl mx-auto px-4 flex items-center justify-between gap-2 overflow-x-auto no-scrollbar border-t border-slate-200/70 dark:border-slate-800/80">
-            <div className="flex items-center gap-1">
+            {/* Numbered tabs — desktop & tablet; on phones the fixed bottom bar takes over */}
+            <div className="hidden lg:flex items-center gap-1">
               {[
                 { id: 'dashboard', icon: Activity, labelAr: '1. البداية وترشيح النهاردة', labelEn: '1. Daily Pick & Watchlist' },
                 { id: 'stock', icon: BarChart2, labelAr: `2. إمتى أشتري وأبيع؟ (${currentAnalysis.symbol.ticker})`, labelEn: `2. Buy/Sell Plan (${currentAnalysis.symbol.ticker})` },
@@ -4079,7 +4783,72 @@ export default function App() {
         {/* ===================================================================
             MAIN PAGE CONTENT AREA
            =================================================================== */}
-        <main className="max-w-7xl mx-auto px-4 py-6 space-y-6">
+        <main className="max-w-7xl mx-auto px-4 pt-6 pb-24 lg:pb-6 space-y-6">
+          {/* ===================================================================
+              PERSONAL GREETING HERO — name, date & instant account snapshot
+             =================================================================== */}
+          <section
+            aria-label={isRtl ? 'الترحيب الشخصي' : 'Personal greeting'}
+            className="relative overflow-hidden rounded-2xl border border-emerald-500/25 bg-gradient-to-l from-slate-900 via-[#0d1420] to-emerald-950 text-white px-5 py-4 sm:px-6 sm:py-5 shadow-lg"
+          >
+            <div
+              aria-hidden
+              className="absolute -top-16 -left-16 w-56 h-56 rounded-full bg-emerald-500/15 blur-3xl pointer-events-none"
+            />
+            <div
+              aria-hidden
+              className="absolute -bottom-16 -right-16 w-56 h-56 rounded-full bg-teal-400/10 blur-3xl pointer-events-none"
+            />
+            <div className="relative flex flex-wrap items-center justify-between gap-4">
+              <div className="flex items-center gap-4 min-w-0">
+                <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-600 flex items-center justify-center font-black text-2xl sm:text-3xl text-white border border-emerald-300/40 shadow-lg shadow-emerald-500/20 shrink-0">
+                  {currentInitial}
+                </div>
+                <div className="min-w-0">
+                  <div className="text-[10px] sm:text-[11px] font-bold text-emerald-400/90 font-mono tracking-wide">
+                    {todayPretty}
+                  </div>
+                  <h2 className="text-lg sm:text-2xl font-black leading-snug mt-0.5">
+                    {timeGreeting}، أستاذ {firstName} 👋
+                  </h2>
+                  <p className="text-[11px] sm:text-xs text-slate-400 mt-0.5">
+                    {isRtl
+                      ? 'دي لوحتك الخاصة — مرتبك ومعاملاتك ومحفظتك محفوظة لك وحدك.'
+                      : 'Your private desk — your salary, trades & portfolio are saved for you alone.'}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 sm:gap-3 text-center">
+                <div className="rounded-xl bg-white/5 border border-white/10 px-3 py-2 min-w-[74px]">
+                  <div className="text-base sm:text-xl font-extrabold text-emerald-400 font-mono">
+                    {currentUser.watchlist.length}
+                  </div>
+                  <div className="text-[9px] sm:text-[10px] text-slate-400 leading-tight">
+                    {isRtl ? 'أسهم أتابعها' : 'Watching'}
+                  </div>
+                </div>
+                <div className="rounded-xl bg-white/5 border border-white/10 px-3 py-2 min-w-[74px]">
+                  <div className="text-base sm:text-xl font-extrabold text-sky-400 font-mono">
+                    {currentUser.trades.length}
+                  </div>
+                  <div className="text-[9px] sm:text-[10px] text-slate-400 leading-tight">
+                    {isRtl ? 'معاملة مسجلة' : 'Trades'}
+                  </div>
+                </div>
+                <div className="rounded-xl bg-white/5 border border-emerald-500/30 px-3 py-2 min-w-[96px]">
+                  <div className="text-base sm:text-xl font-extrabold text-emerald-300 font-mono">
+                    {fmtPrice(budgetAllocationPlan.netInvestableEgp, 0)}
+                  </div>
+                  <div className="text-[9px] sm:text-[10px] text-emerald-500/80 leading-tight">
+                    {isRtl ? 'EGP متاح للاستثمار' : 'EGP to invest'}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+
           {/* -----------------------------------------------------------------
               BEGINNER 3-STEP ROADMAP RIBBON (Shown when Beginner Mode is ON)
              ----------------------------------------------------------------- */}
@@ -4092,7 +4861,7 @@ export default function App() {
                 <div className="space-y-1">
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="font-extrabold text-xs sm:text-sm text-slate-900 dark:text-white">
-                      أهلاً بك يا أستاذ محمود! لأنك في وضع المبتدئ، لا تشغل بالك بالأرقام الكثيرة — امشِ على هذه الخطوات الـ 3 فقط:
+                      أهلاً بك يا {firstName}! لأنك في وضع المبتدئ، لا تشغل بالك بالأرقام الكثيرة — امشِ على هذه الخطوات الـ 3 فقط:
                     </span>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-2.5 pt-1 text-xs text-slate-600 dark:text-slate-300">
@@ -4183,7 +4952,7 @@ export default function App() {
                   <div className="space-y-1.5 max-w-3xl">
                     <div className="flex flex-wrap items-center gap-2 text-xs">
                       <span className="px-2.5 py-0.5 rounded bg-emerald-500/15 font-extrabold text-emerald-600 dark:text-emerald-400">
-                        👋 نصيحة النهاردة الجاهزة — أستاذ محمود العشماوي
+                        👋 نصيحة النهاردة الجاهزة — أستاذ {displayName}
                       </span>
                       <span className="text-slate-400">•</span>
                       <span className="text-slate-500 dark:text-slate-400">
@@ -5398,7 +6167,7 @@ export default function App() {
                         <Calculator className="w-4 h-4" />
                         <span>
                           {isRtl
-                            ? 'حاسبة الكمية الآمنة لـ محمود (ATR Position Sizer)'
+                            ? `حاسبة الكمية الآمنة لـ ${firstName} (ATR Position Sizer)`
                             : 'Interactive ATR Position Size Calculator'}
                         </span>
                       </div>
@@ -5477,7 +6246,7 @@ export default function App() {
                           );
                           triggerToast(
                             isRtl
-                              ? `تم تسجيل وحفظ ${positionSizing.suggestedShares} سهم من ${currentAnalysis.symbol.ticker} في معاملاتك يا أستاذ محمود`
+                              ? `تم تسجيل وحفظ ${positionSizing.suggestedShares} سهم من ${currentAnalysis.symbol.ticker} في معاملاتك يا أستاذ ${firstName}`
                               : `Added ${positionSizing.suggestedShares} shares to portfolio`
                           );
                         }}
@@ -5502,7 +6271,7 @@ export default function App() {
                       <div>
                         <h3 className="font-bold text-sm sm:text-base">
                           {isRtl
-                            ? 'مرشد Gemini التفاعلي للأستاذ محمود (بدون تأليف أرقام ✨)'
+                            ? `مرشد Gemini التفاعلي للأستاذ ${firstName} (بدون تأليف أرقام ✨)`
                             : 'Grounded Gemini AI Mentor Layer'}
                         </h3>
                         <p className="text-[11px] text-slate-400">
@@ -5636,7 +6405,7 @@ export default function App() {
                       ))}
                       {isAiLoading && (
                         <div className="text-xs text-emerald-500 font-bold animate-pulse px-2">
-                          {isRtl ? '✨ جاري إعداد إجابة Gemini للأستاذ محمود...' : 'Analyzing SignalFactSheet...'}
+                          {isRtl ? `✨ جاري إعداد إجابة Gemini للأستاذ ${firstName}...` : 'Analyzing SignalFactSheet...'}
                         </div>
                       )}
                     </div>
@@ -5649,7 +6418,7 @@ export default function App() {
                         onKeyDown={(e) => e.key === 'Enter' && handleAskMentor()}
                         placeholder={
                           isRtl
-                            ? 'اسأل مرشدك الذكي يا أستاذ محمود (مثال: إمتى أشتري وإمتى أبيع؟)...'
+                            ? `اسأل مرشدك الذكي يا أستاذ ${firstName} (مثال: إمتى أشتري وإمتى أبيع؟)...`
                             : 'Ask the AI Mentor about buy/sell zones, risks, or stock comparisons...'
                         }
                         className="flex-1 text-xs rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-3.5 py-2.5 focus:outline-none focus:ring-2 focus:ring-emerald-500"
@@ -5920,7 +6689,7 @@ export default function App() {
                       <span>تم تدريب النظام بالكامل على أمهات كتب الاستثمار والتحليل الفني والبورصة المصرية</span>
                     </span>
                     <h2 className="text-lg sm:text-2xl font-extrabold">
-                      أكاديمية ومجلس حكماء البورصة — مدمجة في قراراتك يا أستاذ محمود
+                      أكاديمية ومجلس حكماء البورصة — مدمجة في قراراتك يا أستاذ {firstName}
                     </h2>
                     <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
                       كل كتاب طلبته (من بنيامين جراهام وبيتر لينش وفيليب فيشر وجيريمي سيجل، إلى جون ميرفي وجيسي ليفرمور ومارك مينيرفيني وجاك شواجر، ومارك دوجلاس ومورجان هاوسل، وشهاب إسماعيل ومحمد سعيد المهدي وأدلة البورصة المصرية Hit the Book وحقوق الأقلية) تم تحويله إلى قواعد رياضية وفلاتر تحمي محفظتك.
@@ -6704,6 +7473,31 @@ export default function App() {
                   </div>
                 </div>
 
+                {/* 📊 Salary Flow Chart — من القبض إلى الاستثمار (يتحدث لحظياً مع أي تعديل) */}
+                <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40 p-4 sm:p-5 space-y-3">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <div>
+                      <h3 className="font-extrabold text-sm sm:text-base flex items-center gap-2 text-slate-800 dark:text-slate-100">
+                        <BarChart2 className="w-4 h-4 text-emerald-500" />
+                        مخطط مرتب الشهر — من القبض إلى الاستثمار
+                      </h3>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                        رسم حي يتحدث فوراً مع أي تعديل تدخله في الدخل أو المعيشة أو الأقساط أو نسبة الطوارئ
+                      </p>
+                    </div>
+                    <div className="text-[10px] sm:text-[11px] font-bold font-mono px-3 py-1.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300">
+                      الدخل: <Numeric className="text-emerald-500">{fmtPrice(budgetAllocationPlan.income, 0)}</Numeric> EGP
+                    </div>
+                  </div>
+                  <SalarySplitChart
+                    income={budgetAllocationPlan.income}
+                    living={budgetAllocationPlan.living}
+                    installments={budgetAllocationPlan.totalInstallments}
+                    reserve={budgetAllocationPlan.emergencyReserveEgp}
+                    investable={budgetAllocationPlan.netInvestableEgp}
+                  />
+                </div>
+
                 {/* Middle Grid: Installments List Manager (5 cols) + Recommended Stock Allocation Table for the Surplus (7 cols) */}
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 pt-2">
                   {/* Installments & Obligations Manager (5 Cols) */}
@@ -6948,8 +7742,8 @@ export default function App() {
                   <div>
                     <h2 className="font-extrabold text-base sm:text-lg">
                       {isRtl
-                        ? 'محفظة وسجل معاملات أستاذ محمود العشماوي (محفوظة تلقائياً 💾)'
-                        : 'Mahmoud El-Ashmawy Auto-Saved Portfolio & Trade History'}
+                        ? `محفظة وسجل معاملات أستاذ ${displayName} (محفوظة تلقائياً 💾)`
+                        : 'Your Auto-Saved Portfolio & Trade History'}
                     </h2>
                     <p className="text-xs text-slate-500 dark:text-slate-400">
                       {isRtl
@@ -7710,7 +8504,7 @@ export default function App() {
 
               <div className="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-xs space-y-1 text-slate-700 dark:text-slate-200">
                 <div className="font-extrabold text-amber-600 dark:text-amber-400">
-                  🔑 النصيحة الذهبية لأول شهر ليك في البورصة يا أستاذ محمود:
+                  🔑 النصيحة الذهبية لأول شهر ليك في البورصة يا أستاذ {firstName}:
                 </div>
                 <p className="leading-relaxed">
                   لا تشتري أبداً بكل فلوسك في سهم واحد، ولا تشتري والسوق بيقفز بسرعة، والتزم دايماً بالـ 3 أرقام اللي البرنامج بيحسبهم ليك: <strong>نطاق الشراء</strong>، و<strong>المستهدف البيعي</strong>، و<strong>وقف الخسارة</strong>.
@@ -7796,7 +8590,7 @@ export default function App() {
                       اختار <strong>"الإضافة إلى الشاشة الرئيسية" (Add to Home Screen)</strong>.
                     </li>
                     <li>
-                      هينزل عندك كأيقونة تطبيق مستقلة على الموبايل باسم <strong>"مرشد البورصة — محمود العشماوي"</strong> تفتحه بضغطة واحدة كل يوم!
+                      هينزل عندك كأيقونة تطبيق مستقلة على الموبايل باسم <strong>مرشد البورصة — {displayName}</strong> تفتحه بضغطة واحدة كل يوم!
                     </li>
                   </ol>
                 </div>
@@ -7817,10 +8611,14 @@ export default function App() {
                   <div className="flex flex-wrap items-center gap-2">
                     <button
                       onClick={() => {
+                        // Export ONLY the current account, credentials stripped
+                        const { pinSalt, pinHash, ...safeUser } = currentUser;
                         const backupPayload = {
+                          kind: 'smart-stock-mentor-backup',
+                          version: 2,
                           exportedAt: new Date().toISOString(),
-                          owner: 'محمود العشماوي',
-                          users,
+                          owner: displayName,
+                          user: safeUser,
                           symbols,
                           signalLedger
                         };
@@ -7854,10 +8652,32 @@ export default function App() {
                           reader.onload = (ev) => {
                             try {
                               const parsed = JSON.parse(String(ev.target?.result || '{}'));
-                              if (Array.isArray(parsed.users)) setUsers(parsed.users);
+                              // Merge into the CURRENT account only. Never accept
+                              // pinSalt/pinHash from a file — local credentials stay local.
+                              const incoming =
+                                (parsed && parsed.user) ||
+                                (Array.isArray(parsed?.users)
+                                  ? parsed.users.find((u) => u && u.id === currentUser.id) || parsed.users[0]
+                                  : null);
+                              if (incoming && typeof incoming === 'object') {
+                                const { pinSalt, pinHash, id, ...safeIncoming } = incoming;
+                                setUsers((prev) =>
+                                  prev.map((u) =>
+                                    u.id === currentUser.id
+                                      ? {
+                                          ...u,
+                                          ...safeIncoming,
+                                          id: u.id,
+                                          pinSalt: u.pinSalt,
+                                          pinHash: u.pinHash
+                                        }
+                                      : u
+                                  )
+                                );
+                              }
                               if (Array.isArray(parsed.symbols)) setSymbols(parsed.symbols);
                               if (Array.isArray(parsed.signalLedger)) setSignalLedger(parsed.signalLedger);
-                              triggerToast('تم استيراد جميع معاملاتك وميزانيتك بنجاح ✓');
+                              triggerToast('تم استيراد معاملاتك وميزانيتك بنجاح ✓');
                             } catch {
                               triggerToast('ملف غير صالح، يرجى اختيار ملف النسخة الاحتياطية الصحيح');
                             }
@@ -8019,6 +8839,128 @@ export default function App() {
             </div>
           </div>
         )}
+
+        {/* ===================================================================
+            📱 MOBILE "MORE" SHEET (opened from the fixed bottom bar)
+           =================================================================== */}
+        {showMobileMore && (
+          <div className="lg:hidden fixed inset-0 z-40">
+            <button
+              aria-label={isRtl ? 'إغلاق القائمة' : 'Close menu'}
+              onClick={() => setShowMobileMore(false)}
+              className="absolute inset-0 bg-black/50 backdrop-blur-[2px]"
+            />
+            <div className="absolute bottom-[74px] inset-x-3 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#11161f] shadow-2xl p-3 space-y-1.5">
+              <div className="flex items-center justify-between px-1.5 pb-1.5 border-b border-slate-100 dark:border-slate-800">
+                <span className="text-[11px] font-extrabold text-slate-500 dark:text-slate-400">
+                  {isRtl ? 'المزيد من الأقسام' : 'More sections'}
+                </span>
+                <button
+                  onClick={() => setShowMobileMore(false)}
+                  className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
+                  aria-label={isRtl ? 'إغلاق' : 'Close'}
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+              <div className="grid grid-cols-2 gap-1.5">
+                {[
+                  { id: 'masters', icon: BookOpen, labelAr: '4. خلاصة الـ 14 كتاباً', labelEn: '4. Masters Rules' },
+                  { id: 'ledger', icon: Scale, labelAr: '6. سجل المصداقية', labelEn: '6. Track Record' },
+                  { id: 'telegram', icon: Send, labelAr: '7. تليجرام والتنبيهات', labelEn: '7. Telegram & Alerts' },
+                  { id: 'architecture', icon: Database, labelAr: '8. فحص المصادر', labelEn: '8. Data Health' }
+                ].map((item) => {
+                  const Icon = item.icon;
+                  const isActive = activeTab === item.id;
+                  return (
+                    <button
+                      key={item.id}
+                      onClick={() => {
+                        setActiveTab(item.id);
+                        setShowMobileMore(false);
+                      }}
+                      className={`flex items-center gap-2.5 px-3 py-3 rounded-xl text-xs font-bold transition border ${
+                        isActive
+                          ? 'bg-emerald-600 text-white border-emerald-500'
+                          : 'bg-slate-50 dark:bg-slate-800/60 text-slate-700 dark:text-slate-200 border-slate-200 dark:border-slate-800 hover:border-emerald-500/50'
+                      }`}
+                    >
+                      <Icon className="w-4 h-4 shrink-0" />
+                      <span className="text-start leading-5">
+                        {isRtl ? item.labelAr : item.labelEn}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ===================================================================
+            📱 FIXED MOBILE BOTTOM NAVIGATION BAR (phones only)
+           =================================================================== */}
+        <nav
+          aria-label={isRtl ? 'التنقل السريع' : 'Quick navigation'}
+          className="lg:hidden fixed bottom-0 inset-x-0 z-40 bg-white/95 dark:bg-[#11161f]/95 backdrop-blur-lg border-t border-slate-200 dark:border-slate-800"
+          style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
+        >
+          <div className="grid grid-cols-5 max-w-lg mx-auto">
+            {[
+              { id: 'dashboard', icon: Activity, labelAr: 'البداية', labelEn: 'Home' },
+              { id: 'stock', icon: BarChart2, labelAr: 'إمتى أشتري؟', labelEn: 'Plan' },
+              { id: 'portfolio', icon: Wallet, labelAr: 'مرتبي ومحفظتي', labelEn: 'Budget' },
+              { id: 'scanner', icon: Filter, labelAr: 'باحث الفرص', labelEn: 'Scanner' },
+              { id: '__more__', icon: LayoutGrid, labelAr: 'المزيد', labelEn: 'More' }
+            ].map((item) => {
+              const Icon = item.icon;
+              const isMore = item.id === '__more__';
+              const isActive = !isMore && activeTab === item.id;
+              const moreHasActiveTab = ['masters', 'ledger', 'telegram', 'architecture'].includes(activeTab);
+              const highlighted = isMore ? showMobileMore || moreHasActiveTab : isActive;
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => {
+                    if (isMore) {
+                      setShowMobileMore((v) => !v);
+                    } else {
+                      setActiveTab(item.id);
+                      setShowMobileMore(false);
+                    }
+                  }}
+                  aria-current={isActive ? 'page' : undefined}
+                  className="relative flex flex-col items-center justify-center gap-0.5 py-2 min-h-[56px] transition select-none"
+                >
+                  {highlighted && (
+                    <span className="absolute top-0 h-[3px] w-12 rounded-b-full bg-emerald-500" />
+                  )}
+                  <Icon
+                    className={`w-5 h-5 transition ${
+                      highlighted
+                        ? 'text-emerald-600 dark:text-emerald-400'
+                        : 'text-slate-400 dark:text-slate-500'
+                    }`}
+                  />
+                  <span
+                    className={`text-[9px] leading-tight font-bold transition ${
+                      highlighted
+                        ? 'text-emerald-600 dark:text-emerald-400'
+                        : 'text-slate-500 dark:text-slate-400'
+                    }`}
+                  >
+                    {isRtl ? item.labelAr : item.labelEn}
+                  </span>
+                  {item.id === 'portfolio' && currentUser.trades.length > 0 && (
+                    <span className="absolute top-1.5 end-3 min-w-[18px] h-[18px] px-1 rounded-full bg-emerald-600 text-white text-[9px] font-extrabold flex items-center justify-center">
+                      {currentUser.trades.length}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        </nav>
       </div>
     </div>
   );
