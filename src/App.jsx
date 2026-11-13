@@ -1806,8 +1806,6 @@ function hashSecret(secret, salt) {
   return (h2 >>> 0).toString(16).padStart(8, '0') + (h1 >>> 0).toString(16).padStart(8, '0');
 }
 
-const DEFAULT_SEED_PIN = '1234';
-
 const cleanDisplayName = (nameAr, nameEn) =>
   (nameAr || nameEn || 'صديقي').split('(')[0].trim();
 
@@ -1815,19 +1813,20 @@ const firstNameOf = (fullName) => cleanDisplayName(fullName).split(/\s+/)[0] || 
 
 const chatStorageKeyFor = (userId) => `${STORAGE_KEYS_CHAT_PREFIX}_${userId || 'guest'}`;
 
-// Each registered account starts with isolated, independent data.
+// Each registered account starts with fully isolated, empty data.
 const buildFreshAccountData = (id, name) => ({
   id,
   nameAr: name,
   nameEn: name,
-  watchlist: ['EGX:COMI', 'NASDAQ:NVDA'],
-  monthlyBudget: JSON.parse(JSON.stringify(DEFAULT_MONTHLY_BUDGET)),
+  watchlist: [],
+  monthlyBudget: null, // filled by the mandatory onboarding wizard
   trades: [],
-  alerts: []
+  alerts: [],
+  onboardingComplete: false
 });
 
 // ============================================================================
-// 6. USER PROFILES (PERSONALIZED FOR MAHMOUD EL-ASHMAWY) & SIGNAL LEDGER
+// 6. USER PROFILES (LOCAL ACCOUNTS) & SIGNAL LEDGER
 // ============================================================================
 const STORAGE_KEYS = {
   USERS: 'mahmoud_stock_mentor_users_v3',
@@ -1840,152 +1839,13 @@ const STORAGE_KEYS = {
 };
 const STORAGE_KEYS_CHAT_PREFIX = STORAGE_KEYS.CHAT_HISTORY;
 
-const DEFAULT_MONTHLY_BUDGET = {
-  incomeEgp: 45000,
-  livingExpensesEgp: 14000,
+const EMPTY_MONTHLY_BUDGET = {
+  incomeEgp: 0,
+  livingExpensesEgp: 0,
   emergencyReservePct: 20,
-  installments: [
-    { id: 1, title: 'قسط السيارة / التمويل', amount: 6500, dueDay: 'يوم 5 في الشهر', paid: false },
-    { id: 2, title: 'قسط شقة / التزام عقاري', amount: 8500, dueDay: 'يوم 15 في الشهر', paid: false },
-    { id: 3, title: 'فواتير واشتراكات شهرية ثابتة', amount: 2500, dueDay: 'يوم 1 في الشهر', paid: true }
-  ]
+  installments: []
 };
 
-const USER_PROFILES = [
-  {
-    id: 'user_mahmoud',
-    nameAr: 'محمود العشماوي (الحساب الرئيسي)',
-    nameEn: 'Mahmoud El-Ashmawy (Primary)',
-    pinSalt: 'seed-mahmoud-v3',
-    pinHash: hashSecret(DEFAULT_SEED_PIN, 'seed-mahmoud-v3'),
-    inviteCode: 'MAHMOUD-VIP-01',
-    telegramChatId: '109482910',
-    watchlist: ['EGX:COMI', 'EGX:TMGH', 'EGX:SWDY', 'EGX:EFIH', 'NASDAQ:NVDA', 'AMEX:SPY', 'INDEX:EGX30'],
-    monthlyBudget: DEFAULT_MONTHLY_BUDGET,
-    trades: [
-      { id: 1, canonicalId: 'EGX:COMI', side: 'BUY', qty: 500, price: 79.2, currency: 'EGP', date: '2026-10-14', channel: 'محفوظة تلقائياً', notes: 'دفعة أولى مع اختراق المتوسط' },
-      { id: 2, canonicalId: 'EGX:TMGH', side: 'BUY', qty: 600, price: 54.5, currency: 'EGP', date: '2026-10-21', channel: 'محفوظة تلقائياً', notes: 'شراء عند منطقة الدخول ATR' },
-      { id: 3, canonicalId: 'EGX:SWDY', side: 'BUY', qty: 400, price: 44.1, currency: 'EGP', date: '2026-10-28', channel: 'محفوظة تلقائياً', notes: 'مركز استثماري متوسط الأجل' },
-      { id: 4, canonicalId: 'NASDAQ:NVDA', side: 'BUY', qty: 25, price: 128.0, currency: 'USD', date: '2026-10-18', channel: 'محفوظة تلقائياً', notes: 'محفظة الأسهم الأمريكية' }
-    ],
-    alerts: [
-      { id: 101, canonicalId: 'EGX:COMI', condition: 'PRICE_ABOVE', threshold: 86.0, cooldownMins: 240, lastTriggered: 'منذ يومين', active: true },
-      { id: 102, canonicalId: 'EGX:TMGH', condition: 'RVOL_SPIKE', threshold: 1.5, cooldownMins: 240, lastTriggered: 'اليوم 13:45', active: true },
-      { id: 103, canonicalId: 'NASDAQ:NVDA', condition: 'RSI_ABOVE', threshold: 70.0, cooldownMins: 120, lastTriggered: 'لم يتفعل بعد', active: true }
-    ]
-  },
-  {
-    id: 'user_karim',
-    nameAr: 'كريم (صديق - دعوة خاصة)',
-    nameEn: 'Karim (Friend Invite)',
-    pinSalt: 'seed-karim-v3',
-    pinHash: hashSecret(DEFAULT_SEED_PIN, 'seed-karim-v3'),
-    inviteCode: 'FRIEND-KRM-88',
-    telegramChatId: '558291044',
-    watchlist: ['EGX:HRHO', 'EGX:ORWE', 'EGX:MASR', 'EGX:EGTS', 'NASDAQ:AAPL', 'NASDAQ:MSFT'],
-    trades: [
-      { id: 11, canonicalId: 'EGX:ORWE', side: 'BUY', qty: 1200, price: 25.4, currency: 'EGP', date: '2026-10-19', channel: 'TELEGRAM', notes: 'سهم توزيعات' },
-      { id: 12, canonicalId: 'EGX:EGTS', side: 'BUY', qty: 1500, price: 1.35, currency: 'USD', date: '2026-10-25', channel: 'WEB', notes: 'سهم دولاري بالبورصة المصرية' },
-      { id: 13, canonicalId: 'NASDAQ:AAPL', side: 'BUY', qty: 15, price: 221.0, currency: 'USD', date: '2026-11-01', channel: 'WEB', notes: '' }
-    ],
-    alerts: [
-      { id: 201, canonicalId: 'EGX:ORWE', condition: 'PRICE_BELOW', threshold: 23.5, cooldownMins: 240, lastTriggered: 'لم يتفعل بعد', active: true }
-    ]
-  }
-];
-
-const INITIAL_SIGNAL_LEDGER = [
-  {
-    id: 'SIG-901',
-    date: '2026-10-15',
-    canonicalId: 'EGX:COMI',
-    ruleAr: 'استمرار اتجاه صاعد مدعوم بسيولة',
-    score: 71.4,
-    confidence: 'HIGH',
-    entryPrice: 79.8,
-    entryZone: [79.2, 80.1],
-    stopZone: [76.5, 77.0],
-    targetZone: [84.2, 85.0],
-    btWinRate: 64.2,
-    btSample: 28,
-    ret5d: 3.15,
-    ret10d: 5.89,
-    ret20d: 6.45,
-    status: 'TARGET_HIT'
-  },
-  {
-    id: 'SIG-902',
-    date: '2026-10-19',
-    canonicalId: 'EGX:TMGH',
-    ruleAr: 'اختراق مقاومة مع سيولة 1.8x',
-    score: 74.0,
-    confidence: 'HIGH',
-    entryPrice: 54.2,
-    entryZone: [53.6, 54.5],
-    stopZone: [51.2, 51.8],
-    targetZone: [58.0, 59.2],
-    btWinRate: 61.5,
-    btSample: 26,
-    ret5d: 4.1,
-    ret10d: 7.75,
-    ret20d: null,
-    status: 'TARGET_HIT'
-  },
-  {
-    id: 'SIG-903',
-    date: '2026-10-22',
-    canonicalId: 'EGX:ORWE',
-    ruleAr: 'ارتداد من منطقة دعم فرعي',
-    score: 41.2,
-    confidence: 'LOW',
-    entryPrice: 25.6,
-    entryZone: [25.3, 25.8],
-    stopZone: [24.4, 24.7],
-    targetZone: [27.1, 27.5],
-    btWinRate: 46.8,
-    btSample: 19,
-    ret5d: -2.15,
-    ret10d: -4.3,
-    ret20d: null,
-    status: 'STOP_HIT'
-  },
-  {
-    id: 'SIG-904',
-    date: '2026-10-27',
-    canonicalId: 'NASDAQ:NVDA',
-    ruleAr: 'اتجاه صاعد أعلى متوسط 20 و50 يوم',
-    score: 76.5,
-    confidence: 'HIGH',
-    entryPrice: 131.4,
-    entryZone: [130.2, 131.9],
-    stopZone: [125.8, 126.9],
-    targetZone: [139.0, 141.5],
-    btWinRate: 66.7,
-    btSample: 33,
-    ret5d: 3.8,
-    ret10d: 5.48,
-    ret20d: null,
-    status: 'TARGET_HIT'
-  },
-  {
-    id: 'SIG-905',
-    date: '2026-11-09',
-    canonicalId: 'EGX:SWDY',
-    ruleAr: 'تجميع إيجابي أعلى متوسط 50 يوم',
-    score: 62.8,
-    confidence: 'MEDIUM',
-    entryPrice: 45.7,
-    entryZone: [45.1, 45.9],
-    stopZone: [43.4, 43.9],
-    targetZone: [48.8, 49.5],
-    btWinRate: 58.3,
-    btSample: 24,
-    ret5d: 1.09,
-    ret10d: null,
-    ret20d: null,
-    status: 'PENDING'
-  }
-];
 
 // Helper to safely load from localStorage
 function loadSavedState(key, fallback) {
@@ -1998,15 +1858,44 @@ function loadSavedState(key, fallback) {
   }
 }
 
-// Migrate users persisted before the PIN system existed — they get the default
-// seed PIN ("1234") so existing installs keep working and can change it later.
+// Drop any legacy rows without PIN credentials (they were bundled demo accounts).
+// Accounts created in the new app always carry pinSalt/pinHash and are untouched.
 function ensureAccountCredentials(list) {
-  if (!Array.isArray(list)) return USER_PROFILES;
-  return list.map((u) => {
-    if (u && u.pinHash) return u;
-    const salt = (u && u.id) || `legacy-${Math.random().toString(36).slice(2)}`;
-    return { ...u, pinSalt: salt, pinHash: hashSecret(DEFAULT_SEED_PIN, salt) };
-  });
+  if (!Array.isArray(list)) return [];
+  return list.filter((u) => u && u.pinHash);
+}
+
+// ============================================================================
+// ONE-TIME STORAGE MIGRATION (v5): purge bundled demo accounts & sample data
+// from any device that ran an earlier, pre-auth build of the app.
+// Real accounts created by users are preserved untouched.
+// ============================================================================
+const STORAGE_VERSION_KEY = 'smart_stock_mentor_storage_version';
+const STORAGE_VERSION = 5;
+function migrateLegacyStorage() {
+  try {
+    const v = Number(localStorage.getItem(STORAGE_VERSION_KEY) || 0);
+    if (v >= STORAGE_VERSION) return;
+    const rawUsers = localStorage.getItem(STORAGE_KEYS.USERS);
+    if (rawUsers) {
+      const list = JSON.parse(rawUsers);
+      if (Array.isArray(list)) {
+        const DEMO_IDS = ['user_mahmoud', 'user_karim'];
+        const kept = list.filter((u) => u && !DEMO_IDS.includes(u.id) && u.pinHash);
+        localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(kept));
+      }
+    }
+    ['user_mahmoud', 'user_karim'].forEach((id) =>
+      localStorage.removeItem(`${STORAGE_KEYS.CHAT_HISTORY}_${id}`)
+    );
+    // Drop the bundled sample signal ledger (SIG-901…905 were illustrative, not real)
+    localStorage.removeItem(STORAGE_KEYS.LEDGER);
+    // Force re-entry through the new mandatory onboarding flow
+    localStorage.removeItem(STORAGE_KEYS.SESSION);
+    localStorage.setItem(STORAGE_VERSION_KEY, String(STORAGE_VERSION));
+  } catch {
+    /* storage unavailable — app will run with empty state */
+  }
 }
 
 function getStoredSessionUserId() {
@@ -2239,16 +2128,8 @@ const AuthScreen = ({ users, onLogin, onSignup }) => {
     // Success: parent swaps the screen to the app shell automatically.
   };
 
-  const fillDemoAccount = (demoName) => {
-    setMode('login');
-    setName(demoName);
-    setPin(DEFAULT_SEED_PIN);
-    setConfirmPin('');
-    setError('');
-  };
-
   const inputBase =
-    'w-full rounded-2xl bg-slate-950/60 border border-slate-700/80 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/30 outline-none text-slate-100 placeholder-slate-500 transition text-sm';
+    'w-full min-h-[48px] rounded-2xl bg-slate-950/60 border border-slate-700/80 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/30 outline-none text-slate-100 placeholder-slate-500 transition text-base sm:text-sm';
 
   return (
     <div
@@ -2387,7 +2268,7 @@ const AuthScreen = ({ users, onLogin, onSignup }) => {
                         setName(e.target.value);
                         setError('');
                       }}
-                      placeholder="مثال: محمود العشماوي"
+                      placeholder="مثلاً: أحمد محمد"
                       list="registered-users"
                       className={`${inputBase} pr-11 pl-4 py-3`}
                     />
@@ -2477,24 +2358,16 @@ const AuthScreen = ({ users, onLogin, onSignup }) => {
                 </button>
               </form>
 
-              {/* Demo accounts quick-fill */}
-              <div className="mt-5 rounded-2xl border border-slate-800 bg-slate-950/50 p-3.5">
-                <div className="text-[10px] font-bold text-slate-500 mb-2 flex items-center gap-1.5">
-                  <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-                  حسابات تجريبية جاهزة (الرقم السري: {DEFAULT_SEED_PIN})
+              {/* First-run helper: guide to create the first account */}
+              {users.length === 0 && mode === 'login' && (
+                <div className="mt-5 rounded-2xl border border-emerald-500/30 bg-emerald-500/5 p-3.5 text-[11px] leading-6 text-emerald-300">
+                  <span className="font-extrabold flex items-center gap-1.5">
+                    <Sparkles className="w-3.5 h-3.5" />
+                    هذه أول مرة على هذه المنصة؟
+                  </span>
+                  أنشئ حسابك من تبويب «حساب جديد» — وهتبدأ بإدخال مرتبك وأقساطك مصاريفك خطوة بخطوة قبل الدخول.
                 </div>
-                <div className="flex flex-wrap gap-2">
-                  {users.slice(0, 4).map((u) => (
-                    <button
-                      key={u.id}
-                      onClick={() => fillDemoAccount(cleanDisplayName(u.nameAr, u.nameEn))}
-                      className="text-[11px] font-bold px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-emerald-600/20 hover:text-emerald-300 border border-slate-700 hover:border-emerald-600/50 text-slate-300 transition"
-                    >
-                      {cleanDisplayName(u.nameAr, u.nameEn)}
-                    </button>
-                  ))}
-                </div>
-              </div>
+              )}
 
               <p className="mt-4 text-[10px] text-slate-500 text-center leading-5">
                 🔒 الرقم السري يُحفظ كهاش محلياً على هذا الجهاز فقط ولا يُرسل لأي خادم.
@@ -2631,6 +2504,379 @@ const SalarySplitChart = ({ income, living, installments, reserve, investable })
 };
 
 // ============================================================================
+// 6.9.6 MANDATORY SALARY & INSTALLMENTS ONBOARDING — first-run gate
+// Every new account MUST enter their monthly income, living costs, installments
+// (or explicitly declare none) and emergency-reserve % before using the app.
+// ============================================================================
+const SalaryOnboarding = ({ firstName, initialBudget, onComplete }) => {
+  const [income, setIncome] = useState(initialBudget?.incomeEgp > 0 ? String(initialBudget.incomeEgp) : '');
+  const [living, setLiving] = useState(
+    initialBudget?.livingExpensesEgp > 0 ? String(initialBudget.livingExpensesEgp) : ''
+  );
+  const [reservePct, setReservePct] = useState(Number(initialBudget?.emergencyReservePct) || 20);
+  const [installments, setInstallments] = useState(
+    Array.isArray(initialBudget?.installments) && initialBudget.installments.length
+      ? initialBudget.installments.map((it) => ({ ...it }))
+      : []
+  );
+  const [noInstallments, setNoInstallments] = useState(
+    Array.isArray(initialBudget?.installments) && initialBudget.installments.length === 0
+  );
+  const [instForm, setInstForm] = useState({ title: '', amount: '', dueDay: 'يوم 10 من الشهر' });
+  const [error, setError] = useState('');
+
+  const incomeNum = Math.max(0, Number(income) || 0);
+  const livingNum = Math.max(0, Number(living) || 0);
+  const totalInstallments = installments.reduce((acc, it) => acc + (Number(it.amount) || 0), 0);
+  const totalObligations = livingNum + totalInstallments;
+  const rawSurplus = Math.max(0, incomeNum - totalObligations);
+  const reserveEgp = Math.round((rawSurplus * reservePct) / 100);
+  const netInvestable = Math.max(0, rawSurplus - reserveEgp);
+  const deficit = Math.max(0, totalObligations - incomeNum);
+
+  const inputBase =
+    'w-full min-h-[48px] rounded-2xl bg-slate-950/60 border border-slate-700/80 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/30 outline-none text-slate-100 placeholder-slate-500 transition text-base sm:text-sm';
+
+  const addInstallment = () => {
+    const title = instForm.title.trim();
+    const amount = parseFloat(instForm.amount);
+    if (!title) {
+      setError('اكتب اسم القسط (مثال: قسط السيارة / جمعية / قسط الشقة)');
+      return;
+    }
+    if (!amount || amount <= 0) {
+      setError('اكتب مبلغ القسط بشكل صحيح');
+      return;
+    }
+    setInstallments((prev) => [
+      ...prev,
+      { id: Date.now(), title, amount, dueDay: instForm.dueDay.trim() || 'شهرياً', paid: false }
+    ]);
+    setInstForm({ title: '', amount: '', dueDay: 'يوم 10 من الشهر' });
+    setError('');
+  };
+
+  const removeInstallment = (id) =>
+    setInstallments((prev) => prev.filter((it) => it.id !== id));
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    setError('');
+    if (!incomeNum || incomeNum <= 0) {
+      setError('اكتب راتبك الشهري الصافي — مش هنعرف نحسبلك المتاح للاستثمار من غيره.');
+      return;
+    }
+    if (living === '' || Number.isNaN(Number(living)) || livingNum < 0) {
+      setError('اكتب مصاريف المعيشة (اكتب 0 لو مفيش)');
+      return;
+    }
+    if (!noInstallments && installments.length === 0) {
+      setError('أضف قسطاً واحداً على الأقل، أو أكد إن «لا توجد أقساط» بالأسفل');
+      return;
+    }
+    if (deficit > 0) {
+      setError(
+        `التزاماتك (${fmtPrice(totalObligations, 0)} ج.م) تتجاوز دخلك — راجع الأرقام، لأن الاستثمار مش صح وأنت بعجز.`
+      );
+      return;
+    }
+    onComplete({
+      incomeEgp: incomeNum,
+      livingExpensesEgp: livingNum,
+      emergencyReservePct: reservePct,
+      installments: noInstallments ? [] : installments.map((it) => ({ ...it, id: it.id || Date.now() }))
+    });
+  };
+
+  return (
+    <div
+      dir="rtl"
+      className="min-h-screen min-h-[100svh] bg-[#05070c] text-slate-100 flex flex-col relative overflow-hidden"
+    >
+      {/* Ambient glows */}
+      <div className="absolute -top-32 -right-32 w-96 h-96 rounded-full bg-emerald-600/20 blur-3xl auth-glow pointer-events-none" />
+      <div className="absolute -bottom-32 -left-32 w-96 h-96 rounded-full bg-teal-500/10 blur-3xl auth-glow pointer-events-none" />
+
+      <div className="relative max-w-3xl w-full mx-auto flex-1 flex flex-col justify-center px-4 py-6 sm:py-8">
+        {/* Header */}
+        <div className="flex items-center gap-3 sm:gap-4 mb-5">
+          <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-700 flex items-center justify-center text-white font-mono font-extrabold text-sm sm:text-base shadow-lg shadow-emerald-500/20 shrink-0 border border-emerald-400/40">
+            EGX
+          </div>
+          <div className="min-w-0">
+            <h1 className="text-lg sm:text-2xl font-black text-white leading-snug">
+              أهلاً بيك، أستاذ {firstName} 👋
+            </h1>
+            <p className="text-[11px] sm:text-xs text-slate-400 mt-0.5 leading-5">
+              خطوة واحدة وتدخل — اكتب مرتبك والتزاماتك عشان نحسبلك بدقة **الصافي المتاح للاستثمار** كل شهر.
+            </p>
+          </div>
+        </div>
+
+        {/* Progress rail */}
+        <div className="flex items-center gap-1.5 sm:gap-2 mb-4 text-[9px] sm:text-[10px] font-bold text-slate-500 overflow-x-auto no-scrollbar whitespace-nowrap px-0.5">
+          {['1. الراتب', '2. المصاريف', '3. الأقساط', '4. الاحتياطي', '5. ابدأ 🚀'].map((s, i) => (
+            <span
+              key={i}
+              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-slate-800 bg-slate-900/70"
+            >
+              <span className="w-4 h-4 rounded-full bg-emerald-600/30 text-emerald-300 flex items-center justify-center text-[8px]">
+                {i + 1}
+              </span>
+              {s.slice(3)}
+            </span>
+          ))}
+        </div>
+
+        <form
+          onSubmit={handleSubmit}
+          className="rounded-3xl border border-slate-800 bg-slate-900/70 backdrop-blur-xl shadow-2xl shadow-black/50 p-5 sm:p-6 space-y-5"
+        >
+          {/* Step 1+2: Income & Living (side by side on desktop) */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <label htmlFor="onb-income" className="block text-[11px] font-bold text-slate-300">
+                1) الراتب الشهري الصافي (جنيه) <span className="text-rose-400">*</span>
+              </label>
+              <input
+                id="onb-income"
+                type="number"
+                inputMode="numeric"
+                min="0"
+                step="500"
+                value={income}
+                onChange={(e) => {
+                  setIncome(e.target.value);
+                  setError('');
+                }}
+                placeholder="مثال: 35000"
+                className={`${inputBase} px-4 py-3.5 text-lg font-extrabold font-mono text-emerald-400 focus:border-emerald-500`}
+              />
+              <div className="flex flex-wrap gap-1.5 pt-1">
+                {[15000, 25000, 35000, 50000, 75000].map((v) => (
+                  <button
+                    key={v}
+                    type="button"
+                    onClick={() => setIncome(String(v))}
+                    className="text-[10px] font-bold font-mono px-2 py-1 rounded-lg bg-slate-800 hover:bg-emerald-600/30 hover:text-emerald-300 text-slate-400 transition"
+                  >
+                    {v.toLocaleString('en-US')}
+                  </button>
+                ))}
+              </div>
+              <p className="text-[10px] text-slate-500">الصافي اللي بينزل في حسابك بعد الخصومات والضرائب</p>
+            </div>
+
+            <div className="space-y-1.5">
+              <label htmlFor="onb-living" className="block text-[11px] font-bold text-slate-300">
+                2) مصاريف المعيشة الشهرية <span className="text-rose-400">*</span>
+              </label>
+              <input
+                id="onb-living"
+                type="number"
+                inputMode="numeric"
+                min="0"
+                step="500"
+                value={living}
+                onChange={(e) => {
+                  setLiving(e.target.value);
+                  setError('');
+                }}
+                placeholder="مثال: 12000"
+                className={`${inputBase} px-4 py-3.5 text-lg font-extrabold font-mono text-rose-300 focus:border-rose-500`}
+              />
+              <div className="flex flex-wrap gap-1.5 pt-1">
+                {[5000, 10000, 15000, 20000].map((v) => (
+                  <button
+                    key={v}
+                    type="button"
+                    onClick={() => setLiving(String(v))}
+                    className="text-[10px] font-bold font-mono px-2 py-1 rounded-lg bg-slate-800 hover:bg-rose-600/30 hover:text-rose-300 text-slate-400 transition"
+                  >
+                    {v.toLocaleString('en-US')}
+                  </button>
+                ))}
+              </div>
+              <p className="text-[10px] text-slate-500">البيت، الأكل، المواصلات، الفواتير، الاشتراكات الثابتة</p>
+            </div>
+          </div>
+
+          {/* Step 3: Installments (required answer) */}
+          <div className="space-y-2">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <label className="block text-[11px] font-bold text-slate-300">
+                3) الأقساط والالتزامات الثابتة <span className="text-rose-400">*</span>
+              </label>
+              <label className="inline-flex items-center gap-2 text-[11px] font-bold text-slate-400 cursor-pointer select-none bg-slate-950/50 border border-slate-800 rounded-xl px-3 py-1.5">
+                <input
+                  type="checkbox"
+                  checked={noInstallments}
+                  onChange={(e) => {
+                    setNoInstallments(e.target.checked);
+                    if (e.target.checked) setInstallments([]);
+                    setError('');
+                  }}
+                  className="rounded text-emerald-600 w-4 h-4"
+                />
+                لا توجد أقساط عندي
+              </label>
+            </div>
+
+            {!noInstallments && (
+              <>
+                <div className="grid grid-cols-12 gap-2">
+                  <input
+                    type="text"
+                    value={instForm.title}
+                    onChange={(e) => setInstForm((p) => ({ ...p, title: e.target.value }))}
+                    placeholder="اسم القسط (سيارة / شقة / جمعية...)"
+                    className={`${inputBase} col-span-12 sm:col-span-5 px-3 py-2.5`}
+                  />
+                  <input
+                    type="number"
+                    inputMode="numeric"
+                    min="0"
+                    value={instForm.amount}
+                    onChange={(e) => setInstForm((p) => ({ ...p, amount: e.target.value }))}
+                    placeholder="المبلغ / شهر"
+                    className={`${inputBase} col-span-6 sm:col-span-3 px-3 py-2.5 font-mono`}
+                  />
+                  <input
+                    type="text"
+                    value={instForm.dueDay}
+                    onChange={(e) => setInstForm((p) => ({ ...p, dueDay: e.target.value }))}
+                    placeholder="موعد الاستحقاق"
+                    className={`${inputBase} col-span-4 sm:col-span-3 px-3 py-2.5`}
+                  />
+                  <button
+                    type="button"
+                    onClick={addInstallment}
+                    aria-label="أضف قسط"
+                    className="col-span-2 sm:col-span-1 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white flex items-center justify-center py-2.5 transition"
+                  >
+                    <Plus className="w-5 h-5" />
+                  </button>
+                </div>
+
+                {installments.length > 0 ? (
+                  <ul className="space-y-1.5 max-h-44 overflow-y-auto">
+                    {installments.map((it) => (
+                      <li
+                        key={it.id}
+                        className="flex items-center justify-between gap-2 rounded-xl bg-slate-950/60 border border-slate-800 px-3 py-2 text-xs"
+                      >
+                        <div className="min-w-0">
+                          <span className="font-bold text-slate-200 truncate block">{it.title}</span>
+                          <span className="text-[10px] text-slate-500">{it.dueDay}</span>
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0">
+                          <Numeric className="font-extrabold text-orange-300">
+                            {fmtPrice(it.amount, 0)} ج.م
+                          </Numeric>
+                          <button
+                            type="button"
+                            onClick={() => removeInstallment(it.id)}
+                            aria-label="احذف القسط"
+                            className="p-2 rounded-lg text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 transition"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-[10px] text-amber-500/90 bg-amber-500/10 border border-amber-500/25 rounded-xl px-3 py-2">
+                    أضف الأقساط (قسط السيارة، القروض، الجمعيات، قسط الشقة...). لو مفيش أقساط فعلاً → علّم على «لا توجد أقساط».
+                  </p>
+                )}
+              </>
+            )}
+            {noInstallments && (
+              <p className="text-[10px] text-emerald-400/90 bg-emerald-500/10 border border-emerald-500/25 rounded-xl px-3 py-2">
+                تمام — هنحسبلك من غير أي أقساط. لو نسيت حاجة تقدر تضيفها لاحقاً من تاب «مرتبي وأقساطي».
+              </p>
+            )}
+          </div>
+
+          {/* Step 4: Emergency reserve */}
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between gap-2">
+              <label htmlFor="onb-reserve" className="text-[11px] font-bold text-slate-300">
+                4) نسبة احتياطي الطوارئ من الفائض
+              </label>
+              <Numeric className="text-amber-400 font-extrabold text-sm">
+                {reservePct}% = {fmtPrice(reserveEgp, 0)} ج.م
+              </Numeric>
+            </div>
+            <input
+              id="onb-reserve"
+              type="range"
+              min="0"
+              max="50"
+              step="5"
+              value={reservePct}
+              onChange={(e) => setReservePct(Number(e.target.value))}
+              className="w-full accent-amber-500 cursor-pointer h-2"
+            />
+            <p className="text-[10px] text-slate-500">سيولة لا تُمس للظروف الطارئة (يُنصح بـ 10%–30%)</p>
+          </div>
+
+          {/* Live summary */}
+          <div className="rounded-2xl border border-emerald-500/30 bg-emerald-500/5 p-4">
+            <div className="text-[10px] font-extrabold text-emerald-400 mb-2">ملخصك الشهري (يتحدث لحظياً)</div>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center text-[10px]">
+              <div className="rounded-xl bg-slate-950/60 border border-slate-800 py-2">
+                <div className="text-slate-500">الدخل</div>
+                <Numeric className="text-emerald-400 font-extrabold text-sm">{fmtPrice(incomeNum, 0)}</Numeric>
+              </div>
+              <div className="rounded-xl bg-slate-950/60 border border-slate-800 py-2">
+                <div className="text-slate-500">الالتزامات</div>
+                <Numeric className="text-rose-400 font-extrabold text-sm">
+                  -{fmtPrice(totalObligations, 0)}
+                </Numeric>
+              </div>
+              <div className="rounded-xl bg-slate-950/60 border border-slate-800 py-2">
+                <div className="text-slate-500">احتياطي الطوارئ</div>
+                <Numeric className="text-amber-400 font-extrabold text-sm">-{fmtPrice(reserveEgp, 0)}</Numeric>
+              </div>
+              <div className="rounded-xl bg-emerald-500/15 border border-emerald-500/40 py-2">
+                <div className="text-emerald-500">الصافي للاستثمار</div>
+                <Numeric className="text-emerald-300 font-black text-base">{fmtPrice(netInvestable, 0)}</Numeric>
+              </div>
+            </div>
+            {deficit > 0 && (
+              <p className="mt-2 text-[11px] font-bold text-rose-400">
+                ⚠️ التزاماتك تتجاوز دخلك بمقدار {fmtPrice(deficit, 0)} ج.م — لازم تعدّل الأرقام قبل المتابعة.
+              </p>
+            )}
+          </div>
+
+          {/* Error */}
+          {error && (
+            <div className="flex items-start gap-2 rounded-2xl border border-rose-500/40 bg-rose-500/10 text-rose-300 text-xs leading-6 px-4 py-3">
+              <ShieldAlert className="w-4 h-4 mt-0.5 shrink-0" />
+              <span>{error}</span>
+            </div>
+          )}
+
+          <button
+            type="submit"
+            className="w-full min-h-[52px] py-4 rounded-2xl bg-gradient-to-l from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-black text-base shadow-lg shadow-emerald-600/30 transition flex items-center justify-center gap-2"
+          >
+            <Wallet className="w-5 h-5" />
+            حفظ ميزانيتي وابدأ التطبيق 🚀
+          </button>
+          <p className="text-[10px] text-slate-500 text-center">
+            🔒 بياناتك محفوظة على هذا الجهاز فقط — وتقدر تعدّلها أي وقت من تاب «مرتبي وأقساطي».
+          </p>
+        </form>
+      </div>
+    </div>
+  );
+};
+
+// ============================================================================
 // 7. MAIN INTERACTIVE APPLICATION COMPONENT
 // ============================================================================
 export default function App() {
@@ -2642,7 +2888,7 @@ export default function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [ramadanMode, setRamadanMode] = useState(false);
 
-  // Beginner Mode (ON by default as requested by Mahmoud) & Clean Sub-Section Organizer
+  // Beginner Mode (ON by default) & Clean Sub-Section Organizer
   const [beginnerMode, setBeginnerMode] = useState(true);
   const [showBeginnerGlossaryModal, setShowBeginnerGlossaryModal] = useState(false);
   const [showLaunchModal, setShowLaunchModal] = useState(false);
@@ -2683,9 +2929,10 @@ export default function App() {
   const [isProbingPhase0, setIsProbingPhase0] = useState(false);
 
   // Multi-user state persisted in localStorage (migrated to credentialed accounts)
-  const [users, setUsers] = useState(() =>
-    ensureAccountCredentials(loadSavedState(STORAGE_KEYS.USERS, USER_PROFILES))
-  );
+    const [users, setUsers] = useState(() => {
+      migrateLegacyStorage();
+      return ensureAccountCredentials(loadSavedState(STORAGE_KEYS.USERS, []));
+    });
   // Real authenticated session — whoever logged in (or signed up) owns an isolated slice of localStorage
   const [sessionUserId, setSessionUserId] = useState(() => getStoredSessionUserId());
   const currentUser = useMemo(
@@ -2727,7 +2974,7 @@ export default function App() {
 
   // Signal Ledger State (persisted)
   const [signalLedger, setSignalLedger] = useState(() =>
-    loadSavedState(STORAGE_KEYS.LEDGER, INITIAL_SIGNAL_LEDGER)
+    loadSavedState(STORAGE_KEYS.LEDGER, [])
   );
 
   // Reports & Analysis States
@@ -2911,6 +3158,29 @@ export default function App() {
       localStorage.setItem(STORAGE_KEYS.HIDE_TOUR, JSON.stringify(false));
     } catch {}
     return { ok: true };
+  };
+
+  const handleCompleteOnboarding = (budget) => {
+    if (!currentUser) return;
+    setUsers((prev) =>
+      prev.map((u) =>
+        u.id === currentUser.id
+          ? { ...u, monthlyBudget: budget, onboardingComplete: true }
+          : u
+      )
+    );
+    // Fresh account → always re-run the spotlight tour against the new data
+    try {
+      localStorage.setItem(STORAGE_KEYS.HIDE_TOUR, JSON.stringify(false));
+    } catch {}
+    setTourStep(0);
+    setShowWelcomeTour(true);
+    setActiveTab('dashboard');
+    triggerToast(
+      isRtl
+        ? `أهلاً بك يا أستاذ ${firstName}! حفظت ميزانيتك — والجولة التدريبية جاهزة تعرّفك على كل حاجة 🚀`
+        : `Welcome ${firstName}! Budget saved — your guided tour is ready 🚀`
+    );
   };
 
   const handleLogout = () => {
@@ -3109,10 +3379,10 @@ export default function App() {
   );
 
   // ==========================================================================
-  // 💰 MAHMOUD'S MONTHLY INCOME, INSTALLMENTS & SURPLUS INVESTMENT PLANNER
+  // 💰 USER MONTHLY INCOME, INSTALLMENTS & SURPLUS INVESTMENT PLANNER
   // ==========================================================================
   const userBudget = useMemo(
-    () => currentUser?.monthlyBudget || DEFAULT_MONTHLY_BUDGET,
+    () => currentUser?.monthlyBudget || EMPTY_MONTHLY_BUDGET,
     [currentUser]
   );
 
@@ -3120,7 +3390,7 @@ export default function App() {
     setUsers((prev) =>
       prev.map((u) => {
         if (!currentUser || u.id !== currentUser.id) return u;
-        const currentB = u.monthlyBudget || DEFAULT_MONTHLY_BUDGET;
+        const currentB = u.monthlyBudget || EMPTY_MONTHLY_BUDGET;
         const nextB = typeof updater === 'function' ? updater(currentB) : { ...currentB, ...updater };
         return { ...u, monthlyBudget: nextB };
       })
@@ -3514,7 +3784,7 @@ export default function App() {
   };
 
   // ==========================================================================
-  // ✨ GEMINI FEATURE 1: DAILY MARKET RADAR FOR MAHMOUD EL-ASHMAWY
+  // ✨ GEMINI FEATURE 1: DAILY MARKET RADAR
   // ==========================================================================
   const handleRunGeminiDailyRadar = async () => {
     setIsRadarLoading(true);
@@ -3563,7 +3833,7 @@ export default function App() {
   };
 
   // ==========================================================================
-  // ✨ GEMINI FEATURE 2: DEEP STOCK BUY/SELL ACTION PLAN FOR MAHMOUD
+  // ✨ GEMINI FEATURE 2: DEEP STOCK BUY/SELL ACTION PLAN
   // ==========================================================================
   const handleGenerateStockGeminiPlan = async (analysisObj) => {
     const a = analysisObj || currentAnalysis;
@@ -3618,7 +3888,7 @@ export default function App() {
   };
 
   // ==========================================================================
-  // ✨ GEMINI FEATURE 3: PORTFOLIO DOCTOR (ANALYZING MAHMOUD'S SAVED TRADES)
+  // ✨ GEMINI FEATURE 3: PORTFOLIO DOCTOR (ANALYZING SAVED TRADES)
   // ==========================================================================
   const handleRunGeminiPortfolioAudit = async () => {
     setIsPortfolioAiLoading(true);
@@ -3968,8 +4238,15 @@ export default function App() {
       )
     );
     setSymbols(INITIAL_SYMBOLS);
-    setSignalLedger(INITIAL_SIGNAL_LEDGER);
-    triggerToast(isRtl ? `تمت استعادة البيانات الافتراضية لحساب ${firstName} ✓` : 'Reset to defaults');
+    setSignalLedger([]);
+    try {
+      localStorage.setItem(STORAGE_KEYS.HIDE_TOUR, JSON.stringify(false));
+    } catch {}
+    triggerToast(
+      isRtl
+        ? `تم مسح كل بيانات حسابك يا ${firstName} — هنملأ الراتب والأقساط من الصفر`
+        : 'All your account data cleared — starting fresh'
+    );
   };
 
   // Interactive Telegram Bot Command Router
@@ -3997,7 +4274,11 @@ export default function App() {
     if (cmd === '/signal') {
       const target = findAnalysisByTicker(arg1 || 'COMI') || allAnalyses['EGX:COMI'];
       const dec = target.price < 5 ? 3 : 2;
-      chartUrl = renderTelegramChartDataURL(target);
+      try {
+        chartUrl = renderTelegramChartDataURL(target);
+      } catch {
+        chartUrl = null;
+      }
       botReplyText =
         `📊 *تحليل سهم: ${target.symbol.nameAr} (${target.symbol.canonicalId})*\n` +
         `💵 السعر الحالي: ${fmtPrice(target.price, dec)} ${target.symbol.currency} (${fmtPct(target.changePct)})\n` +
@@ -4223,6 +4504,18 @@ export default function App() {
     return <AuthScreen users={users} onLogin={handleLogin} onSignup={handleSignup} />;
   }
 
+  // 🧭 MANDATORY ONBOARDING GATE — no salary/budget yet → onboarding wall.
+  // Nobody reaches the app before entering income, living costs and installments.
+  if (!currentUser.onboardingComplete) {
+    return (
+      <SalaryOnboarding
+        firstName={firstName}
+        initialBudget={currentUser.monthlyBudget}
+        onComplete={handleCompleteOnboarding}
+      />
+    );
+  }
+
   const hourNow = new Date().getHours();
   const timeGreeting = isRtl
     ? hourNow < 12
@@ -4373,7 +4666,7 @@ export default function App() {
         {/* ===================================================================
             INSTITUTIONAL TOP TELEMETRY & LIVE TICKER TAPE BAR
            =================================================================== */}
-        <div className="bg-[#080b10] text-slate-300 border-b border-slate-800/90 px-4 py-1.5 text-[11px]">
+        <div className="bg-[#080b10] text-slate-300 border-b border-slate-800/90 px-3 py-1 sm:px-4 sm:py-1.5 text-[10px] sm:text-[11px]">
           <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3">
             {/* Left/Right: Live Market Status & USD/EGP Reference */}
             <div className="flex flex-wrap items-center gap-3">
@@ -4435,9 +4728,9 @@ export default function App() {
             MAIN TERMINAL HEADER (HUMAN-CRAFTED PRO TRADING DESK DESIGN)
            =================================================================== */}
         <header className="sticky top-0 z-30 bg-white dark:bg-[#11161f] border-b border-slate-200 dark:border-slate-800/90 shadow-xs">
-          <div className="max-w-7xl mx-auto px-4 py-2.5 flex flex-wrap items-center justify-between gap-3">
+          <div className="max-w-7xl mx-auto px-3 sm:px-4 py-2 sm:py-2.5 flex flex-wrap items-center justify-between gap-2 sm:gap-3">
             {/* Brand Identity — Clean, Serious, Zero Fluff */}
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 sm:gap-3">
               <div className="w-9 h-9 rounded-lg bg-slate-900 dark:bg-emerald-600 flex items-center justify-center text-white font-mono font-extrabold text-sm tracking-tighter border border-slate-700">
                 EGX
               </div>
@@ -4464,8 +4757,8 @@ export default function App() {
               </div>
             </div>
 
-            {/* Universal Ticker Search */}
-            <div className="relative flex-1 max-w-sm min-w-[210px]">
+            {/* Universal Ticker Search — full width on phones */}
+            <div className="relative flex-1 order-last sm:order-none w-full sm:w-auto max-w-full sm:max-w-sm min-w-0 sm:min-w-[210px]">
               <div className="relative">
                 <Search
                   className={`w-3.5 h-3.5 text-slate-400 absolute top-1/2 -translate-y-1/2 ${
@@ -4481,7 +4774,7 @@ export default function App() {
                       ? 'بحث بالكود أو الاسم (COMI, TMGH, SWDY, NVDA)...'
                       : 'Search ticker (COMI, TMGH, NVDA)...'
                   }
-                  className={`w-full text-xs rounded-lg bg-slate-100 dark:bg-[#0b0e14] border border-slate-200 dark:border-slate-800 py-1.5 ${
+                  className={`w-full text-base sm:text-xs rounded-lg bg-slate-100 dark:bg-[#0b0e14] border border-slate-200 dark:border-slate-800 py-2.5 sm:py-1.5 ${
                     isRtl ? 'pr-8 pl-20' : 'pl-8 pr-20'
                   } focus:outline-none focus:border-emerald-500 transition`}
                 />
@@ -4489,7 +4782,7 @@ export default function App() {
                   onClick={() => setShowAddSymbolModal(true)}
                   className={`absolute top-1/2 -translate-y-1/2 ${
                     isRtl ? 'left-1.5' : 'right-1.5'
-                  } text-[10px] font-bold px-2 py-0.5 rounded bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-emerald-600 hover:text-white transition`}
+                  } text-[10px] font-bold px-2 py-1 sm:py-0.5 rounded bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-emerald-600 hover:text-white transition`}
                 >
                   {isRtl ? '+ إدراج رمز' : '+ Symbol'}
                 </button>
@@ -4566,7 +4859,7 @@ export default function App() {
               <div className="flex items-center rounded-lg bg-slate-100 dark:bg-[#0b0e14] border border-slate-200 dark:border-slate-800 p-0.5 text-[11px]">
                 <button
                   onClick={() => setLiveStreaming((s) => !s)}
-                  className={`flex items-center gap-1 px-2 py-1 rounded-md font-bold transition ${
+                  className={`flex items-center gap-1 px-2 py-2 sm:py-1 rounded-md font-bold transition ${
                     liveStreaming
                       ? 'bg-emerald-600 text-white'
                       : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
@@ -4585,7 +4878,7 @@ export default function App() {
                       setLiveStreaming(true);
                     }}
                     title={`تحديث أوتوماتيكي كل ${sec} ثوانٍ`}
-                    className={`px-1.5 py-1 rounded-md font-mono font-semibold transition ${
+                    className={`px-2.5 py-2 sm:px-1.5 sm:py-1 rounded-md font-mono font-semibold transition ${
                       liveStreaming && refreshIntervalSec === sec
                         ? 'bg-white dark:bg-slate-800 text-emerald-600 dark:text-emerald-400 shadow-2xs'
                         : 'text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
@@ -4598,7 +4891,7 @@ export default function App() {
                 <button
                   onClick={() => performLiveMarketSync(true)}
                   title={isRtl ? 'تحديث فوري الآن' : 'Sync Now'}
-                  className="px-2 py-1 text-slate-600 dark:text-slate-300 hover:text-emerald-500 font-semibold border-s border-slate-200 dark:border-slate-800"
+                  className="px-2.5 py-2 sm:py-1 text-slate-600 dark:text-slate-300 hover:text-emerald-500 font-semibold border-s border-slate-200 dark:border-slate-800"
                 >
                   {isRtl ? 'تحديث الآن' : 'Sync'}
                 </button>
@@ -4608,7 +4901,7 @@ export default function App() {
               <div className="flex items-center p-0.5 rounded-lg bg-slate-100 dark:bg-[#0b0e14] border border-slate-200 dark:border-slate-800 text-[11px] font-bold">
                 <button
                   onClick={() => setDarkMode(false)}
-                  className={`flex items-center gap-1 px-2 py-1 rounded-md transition ${
+                  className={`flex items-center gap-1 px-2.5 py-2 sm:py-1 rounded-md transition ${
                     !darkMode
                       ? 'bg-white text-slate-900 shadow-2xs'
                       : 'text-slate-500 dark:text-slate-400'
@@ -4619,7 +4912,7 @@ export default function App() {
                 </button>
                 <button
                   onClick={() => setDarkMode(true)}
-                  className={`flex items-center gap-1 px-2 py-1 rounded-md transition ${
+                  className={`flex items-center gap-1 px-2.5 py-2 sm:py-1 rounded-md transition ${
                     darkMode
                       ? 'bg-slate-800 text-white shadow-2xs'
                       : 'text-slate-500 dark:text-slate-400'
@@ -4636,7 +4929,7 @@ export default function App() {
                   setTourStep(0);
                   setShowWelcomeTour(true);
                 }}
-                className="px-2.5 py-1.5 rounded-lg bg-slate-100 dark:bg-[#0b0e14] hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-800 text-[11px] font-semibold flex items-center gap-1"
+                className="px-2.5 py-2 sm:py-1.5 rounded-lg bg-slate-100 dark:bg-[#0b0e14] hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-800 text-[11px] font-semibold flex items-center gap-1"
               >
                 <HelpCircle className="w-3.5 h-3.5" />
                 <span className="hidden sm:inline">{isRtl ? 'دليل المنصة' : 'Guide'}</span>
@@ -4707,7 +5000,7 @@ export default function App() {
             <div className="flex items-center gap-1.5 py-1.5 shrink-0">
               <button
                 onClick={() => setBeginnerMode((b) => !b)}
-                className={`px-2.5 py-1 rounded-lg text-[11px] font-bold border transition flex items-center gap-1 ${
+                className={`px-2.5 py-2 sm:py-1 rounded-lg text-[11px] font-bold border transition flex items-center gap-1 ${
                   beginnerMode
                     ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-600 dark:text-emerald-400'
                     : 'bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-500'
@@ -4719,9 +5012,10 @@ export default function App() {
 
               <button
                 onClick={() => setShowBeginnerGlossaryModal(true)}
-                className="px-2.5 py-1 rounded-lg bg-amber-500/15 border border-amber-500/30 text-amber-600 dark:text-amber-400 text-[11px] font-bold hover:bg-amber-500/25 transition"
+                className="px-2.5 py-2 sm:py-1 rounded-lg bg-amber-500/15 border border-amber-500/30 text-amber-600 dark:text-amber-400 text-[11px] font-bold hover:bg-amber-500/25 transition"
               >
-                📖 قاموس المبتدئ المبسط
+                <span className="hidden sm:inline">📖 قاموس المبتدئ المبسط</span>
+                <span className="sm:hidden">📖 القاموس</span>
               </button>
 
               <button
@@ -4729,7 +5023,8 @@ export default function App() {
                 className="px-2.5 py-1 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-[11px] font-bold transition flex items-center gap-1 shadow-2xs"
               >
                 <Globe className="w-3.5 h-3.5" />
-                <span>🚀 نشر أونلاين + تطبيق للموبايل</span>
+                <span className="hidden sm:inline">🚀 نشر أونلاين + تطبيق للموبايل</span>
+                <span className="sm:hidden">🚀 النشر</span>
               </button>
             </div>
           </div>
@@ -5304,6 +5599,21 @@ export default function App() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 dark:divide-slate-800/80">
+                      {currentUser.watchlist.length === 0 && (
+                        <tr>
+                          <td colSpan={7} className="py-10 px-4 text-center">
+                            <div className="text-3xl mb-2">⭐</div>
+                            <p className="font-extrabold text-slate-700 dark:text-slate-200">
+                              {isRtl ? 'قائمة متابعتك فارغة لسه' : 'Your watchlist is empty'}
+                            </p>
+                            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-md mx-auto leading-6">
+                              {isRtl
+                                ? 'ابحث عن أي سهم من خانة البحث فوق (COMI، TMGH، NVDA...) واضغط «+ تابع» — أو اضغط «إدراج سهم» لإضافة أي رمز للتحليل الفوري.'
+                                : 'Search any ticker above and tap “+ Watch”, or add one with “Add Symbol”.'}
+                            </p>
+                          </td>
+                        </tr>
+                      )}
                       {currentUser.watchlist.map((cid) => {
                         const a = allAnalyses[cid];
                         if (!a) return null;
@@ -5653,7 +5963,7 @@ export default function App() {
               </div>
 
               {/* ===============================================================
-                  3-COLUMN ACTIONABLE BUY / SELL / STOP ROADMAP FOR MAHMOUD
+                  3-COLUMN ACTIONABLE BUY / SELL / STOP ROADMAP
                  =============================================================== */}
               {(stockSubView === 'ALL' || stockSubView === 'STEP1_PLAN') && (
               <div
@@ -7227,14 +7537,18 @@ export default function App() {
 
                     <div className="px-3.5 py-2 rounded-xl bg-emerald-500/10 border border-emerald-500/25">
                       <span className="text-slate-400">{isRtl ? 'نسبة إصابة المستهدف الفعلية:' : 'Realized Target Hit Rate:'} </span>
-                      <Numeric className="font-extrabold text-emerald-500 text-sm">
-                        {(
-                          (signalLedger.filter((r) => r.status === 'TARGET_HIT').length /
-                            Math.max(1, signalLedger.filter((r) => r.status !== 'PENDING').length)) *
-                          100
-                        ).toFixed(1)}
-                        %
-                      </Numeric>
+                      {signalLedger.filter((r) => r.status !== 'PENDING').length === 0 ? (
+                        <span className="text-slate-500 font-bold">{isRtl ? '— (لا توجد نتائج بعد)' : '— (no outcomes yet)'}</span>
+                      ) : (
+                        <Numeric className="font-extrabold text-emerald-500 text-sm">
+                          {(
+                            (signalLedger.filter((r) => r.status === 'TARGET_HIT').length /
+                              signalLedger.filter((r) => r.status !== 'PENDING').length) *
+                            100
+                          ).toFixed(1)}
+                          %
+                        </Numeric>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -7253,6 +7567,21 @@ export default function App() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                      {signalLedger.length === 0 && (
+                        <tr>
+                          <td colSpan={7} className="py-10 px-4 text-center">
+                            <div className="text-3xl mb-2">📭</div>
+                            <p className="font-extrabold text-slate-700 dark:text-slate-200">
+                              {isRtl ? 'السجل فارغ — ولا توجد إشارات وهمية هنا' : 'Ledger empty — no fabricated signals'}
+                            </p>
+                            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-md mx-auto leading-6">
+                              {isRtl
+                                ? 'المنصة ستسجّل هنا كل إشارة تصدرها فعلياً مع سعر الدخول والوقف والهدف، ثم تحسب النتيجة بعد ٥ و١٠ و٢٠ جلسة — بشفافية كاملة.'
+                                : 'Every signal emitted is logged here with entry/stop/target and tracked after +5/+10/+20 sessions.'}
+                            </p>
+                          </td>
+                        </tr>
+                      )}
                       {signalLedger.map((row) => (
                         <tr key={row.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30">
                           <td className="py-3 px-3">
@@ -7332,7 +7661,7 @@ export default function App() {
           )}
 
           {/* -----------------------------------------------------------------
-              TAB 5: MAHMOUD'S SAVED PORTFOLIO, MONTHLY BUDGET & GEMINI DOCTOR
+              TAB 5: SAVED PORTFOLIO, MONTHLY BUDGET & GEMINI DOCTOR
              ----------------------------------------------------------------- */}
           {activeTab === 'portfolio' && (
             <div id="tour-saved-portfolio" className="space-y-6">
@@ -7769,11 +8098,11 @@ export default function App() {
 
                   <button
                     onClick={handleResetSavedData}
-                    title={isRtl ? 'استعادة المعاملات الافتراضية' : 'Reset to Default'}
+                    title={isRtl ? 'مسح معاملاتي وبياناتي والبدء من الصفر' : 'Erase my data'}
                     className="px-3 py-2.5 rounded-2xl bg-slate-100 dark:bg-slate-800 hover:bg-rose-500/15 hover:text-rose-500 text-slate-500 text-xs font-bold flex items-center gap-1"
                   >
                     <RotateCcw className="w-3.5 h-3.5" />
-                    <span>{isRtl ? 'استعادة الافتراضي' : 'Reset'}</span>
+                    <span>{isRtl ? 'مسح بيانات حسابي' : 'Clear my data'}</span>
                   </button>
                 </div>
               </div>
@@ -7994,7 +8323,7 @@ export default function App() {
                 </div>
               </div>
 
-              {/* Saved Historical Transactions Log for Mahmoud El-Ashmawy */}
+              {/* Saved Historical Transactions Log */}
               <div className="rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5 overflow-x-auto">
                 <div className="flex items-center justify-between mb-4">
                   <div>
@@ -8628,7 +8957,7 @@ export default function App() {
                         const url = URL.createObjectURL(blob);
                         const a = document.createElement('a');
                         a.href = url;
-                        a.download = `mahmoud-stock-mentor-backup-${new Date().toISOString().split('T')[0]}.json`;
+                        a.download = `stock-mentor-backup-${new Date().toISOString().split('T')[0]}.json`;
                         a.click();
                         URL.revokeObjectURL(url);
                         triggerToast('تم تحميل ملف النسخة الاحتياطية لبياناتك ومعاملاتك بنجاح ✓');
