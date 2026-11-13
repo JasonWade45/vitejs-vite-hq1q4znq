@@ -1,16 +1,50 @@
-# React + Vite
+# 📈 المرشد الذكي للبورصة — Smart Stock Mentor
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+منصة عربية للبورصة المصرية والأسواق العالمية: تحسب **صافي مرتبك بعد الأقساط**، تختارلك **أفضل أسهم اليوم** مع نطاق الشراء ووقف الخسارة والمستهدف، وتتابع محفظتك تلقائياً — لكل مستخدم حساب مستقل.
 
-Currently, two official plugins are available:
+An Arabic-first, local-first EGX & global markets platform: computes your net monthly surplus after installments, picks today's top stocks with entry/target/stop zones, and auto-refreshes every 5–10 seconds. Every account is fully isolated and stored on-device.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## ✨ المزايا الأساسية | Key Features
 
-## React Compiler
+1. **🔐 شاشة تسجيل دخول وإنشاء حساب جديد** — بالاسم والرقم السري (4–6 أرقام). كل حساب يحتفظ ببياناته ومعاملاته ومرتبه وأقساطه ومفضلته ودردشته بشكل **مستقل تماماً** على نفس الجهاز. الأرقام السرية تُخزّن كهاش مُملّح (salted hash) ولا تُرسل لأي خادم — وليست "مخفية" فقط بل مشفّرة محلياً.
+2. **👋 ترحيب شخصي في كل مكان** — تحية باسمك في الشريط العلوي، ولوحة البداية، وجميع التقارير والردود الذكية، مع **جولة إرشادية مضيئة (Spotlight Tour)** تتنقل تلقائياً بين الأقسام مع زر إغلاق علوي (**X**) يحفظ اختيارك فلا تعود تظهر.
+3. **📱 واجهة للموبايل والكمبيوتر** — شريط تنقل سفلي ثابت للهاتف (5 أقسام + ورقة "المزيد")، وتنقل مرقّم للويب، مع دعم Safe-area للشاشات الحديثة و RTL كامل.
+4. **📊 مخطط مرتب الشهر والأقساط** — دائرة بيانية (Donut) وشريط مكدس يوضحان: المعيشة ← الأقساط ← احتياطي الطوارئ ← **الصافي المتاح للاستثمار**، مع **ترشيحات الشراء الفوري** (أقوى 3 أسهم مصرية بوزن 50/30/20% وعدد الأسهم والتكلفة الدقيقة)، و**تحديث تلقائي كل 5–10 ثوانٍ** (قابل للاختيار: 5s / 7s / 10s).
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## 🔑 حسابات تجريبية جاهزة | Demo Accounts
 
-## Expanding the Oxlint configuration
+Two ready-made personas ship with the app (PIN مقصود للتجربة فقط):
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and Oxlint's TypeScript related rules in your project.
+| الاسم | الرقم السري |
+|------|------------|
+| محمود العشماوي | `1234` |
+| كريم | `1234` |
+
+أو أنشئ حسابك الخاص من تبويب **"حساب جديد"** — حسابك فارغ تماماً وببيانات منفصلة.
+
+## 🚀 التشغيل | Getting Started
+
+```bash
+npm install
+npm run dev      # http://localhost:5173
+npm run build    # إنتاج محسّن في dist/
+npm run preview  # معاينة الإنتاج
+```
+
+## 🗂 بنية التخزين المحلي | Local Storage Layout
+
+كل مفتاح تحت بادئة `mahmoud_stock_mentor_*`:
+
+- `..._users_v3` — جميع الحسابات (بيانات كل مستخدم + هاش رقمه السري)
+- `..._session_v1` — الجلسة الحالية (هوية الحساب الموقّع)
+- `..._symbols_v3` / `..._ledger_v3` — بيانات السوق وسجل الإشارات (مشتركة)
+- `..._chat_v3_<userId>` — سجل محادثة كل مستخدم على حدة
+- `..._theme_v3` / `..._hide_tour_v3` — التفضيلات
+
+**النسخ الاحتياطي:** من «نشر أونلاين + تطبيق للموبايل» يمكنك تحميل/استيراد نسخة JSON — تصدير/استيراد **لحسابك الحالي فقط**، الرقم السري لا يغادر جهازك أبداً.
+
+## ⚠️ ملاحظة قانونية
+
+بيانات إحصائية وفنية لأغراض تعليمية وإدارة المخاطر — وليست توصية استثمارية مباشرة.
+
+> التقنية: React 18 + Vite + Tailwind CSS (class-based dark mode نهاري/ليلي) + Lucide icons. بدون خادم — بياناتك على جهازك.

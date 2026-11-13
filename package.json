@@ -1,7 +1,7 @@
 {
   "name": "smart-stock-mentor",
   "private": true,
-  "version": "4.0.0",
+  "version": "4.1.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -15,6 +15,12 @@
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^4.3.3",
+    "autoprefixer": "^10.4.20",
+    "jsdom": "^25.0.1",
+    "oxlint": "^1.13.0",
+    "postcss": "^8.4.49",
+    "tailwindcss": "^3.4.17",
     "vite": "^5.4.10"
-  }
+  },
+  "description": "Arabic EGX & global markets mentor — per-user accounts (name+PIN), salary/installment surplus investor, instant buy picks, auto-refresh 5-10s, mobile bottom bar."
 }
