@@ -5163,7 +5163,7 @@ const SessionStateChip = ({ state }) => {
                     {isRtl ? `منصة التداول والتحليل الكمي — ${displayName}` : `${displayName} · Quantitative Trading Desk`}
                   </h1>
                   <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
-                    PRO v4.3
+                    PRO v4.4
                   </span>
                 </div>
                 <p className="text-[11px] text-slate-500 dark:text-slate-400">
@@ -9347,7 +9347,7 @@ const SessionStateChip = ({ state }) => {
                     </thead>
                     <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                       <tr>
-                        <td className="py-3 px-3 font-bold text-emerald-400">Vercel /api/quotes — الـ Proxy الداخلي (المسار الأساسي)</td>
+                        <td className="py-3 px-3 font-bold text-emerald-400">Vercel /api/quotes — الـ Proxy الداخلي (المسار الأساسي: Yahoo spark←query1/query2، v8، ثم stooq)</td>
                         <td className="py-3 px-3">نفس بيانات Yahoo، لكن serverless function داخل نفس الموقع داخل نفس الموقع — بدون CORS وبدون بروكسي خارجي</td>
                         <td className="py-3 px-3">~15 دقيقة</td>
                         <td className="py-3 px-3 font-semibold text-emerald-400">
